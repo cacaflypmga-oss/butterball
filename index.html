@@ -1,0 +1,4566 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Butterball · AI 廣告素材工作站</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+  if (window.pdfjsLib) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+</script>
+<style>
+  :root {
+    --bg: #fafaf7;
+    --bg-soft: #f4f3ee;
+    --bg-card: #ffffff;
+    --bg-input: #ffffff;
+    --line: #e8e6e0;
+    --line-bright: #d4d1c8;
+    --ink: #1a1a1f;
+    --ink-soft: #5a5750;
+    --ink-mute: #9a968c;
+    --accent: #ff5b1f;
+    --accent-soft: #ff8a5c;
+    --accent-bg: rgba(255, 91, 31, 0.06);
+    --warn: #d4a017;
+    --ok: #4ca84c;
+    --err: #d63d5c;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Noto Sans TC', -apple-system, sans-serif;
+    font-weight: 400;
+    line-height: 1.55;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 15% 0%, rgba(255, 91, 31, 0.04), transparent 40%),
+      radial-gradient(circle at 85% 100%, rgba(255, 91, 31, 0.03), transparent 40%),
+      var(--bg);
+    background-attachment: fixed;
+  }
+
+  header {
+    border-bottom: 1px solid var(--line);
+    padding: 20px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(250, 250, 247, 0.85);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .brand { display: flex; align-items: baseline; gap: 14px; }
+  .brand h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-style: italic;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+  }
+  .brand span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+  }
+
+  .api-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--err);
+    transition: background 0.3s;
+  }
+  .dot.connected { background: var(--ok); box-shadow: 0 0 12px var(--ok); }
+  .api-status button {
+    background: transparent;
+    border: 1px solid var(--line-bright);
+    color: var(--ink);
+    padding: 6px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .api-status button:hover { border-color: var(--accent); color: var(--accent); }
+
+  main {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 0;
+    min-height: calc(100vh - 73px);
+  }
+
+  .panel {
+    border-right: 1px solid var(--line);
+    padding: 32px;
+    overflow-y: auto;
+    max-height: calc(100vh - 73px);
+    position: sticky;
+    top: 73px;
+  }
+  .panel::-webkit-scrollbar { width: 6px; }
+  .panel::-webkit-scrollbar-track { background: transparent; }
+  .panel::-webkit-scrollbar-thumb { background: var(--line-bright); border-radius: 3px; }
+
+  .section {
+    margin-bottom: 28px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+  }
+  .section:last-child { border-bottom: none; }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  label span.req { color: var(--accent); }
+  label small { color: var(--ink-mute); font-size: 11px; margin-left: 4px; }
+
+  textarea, input[type="text"], input[type="password"], select {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    transition: border 0.15s;
+    margin-bottom: 12px;
+  }
+  textarea:focus, input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: #fffdf9;
+  }
+  textarea { resize: vertical; min-height: 90px; line-height: 1.5; }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .chip {
+    padding: 7px 13px;
+    border: 1px solid var(--line-bright);
+    background: transparent;
+    color: var(--ink-soft);
+    border-radius: 100px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .chip:hover { border-color: var(--accent-soft); color: var(--ink); }
+  .chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 500;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .mode-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--bg-input);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 3px;
+    margin-bottom: 12px;
+  }
+  .mode-toggle button {
+    background: transparent;
+    border: none;
+    color: var(--ink-soft);
+    padding: 9px;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .mode-toggle button.active {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 500;
+  }
+  .mode-hint {
+    font-size: 11px;
+    color: var(--ink-mute);
+    line-height: 1.5;
+    padding: 0 2px;
+    margin-bottom: 4px;
+  }
+
+  .count-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .count-row input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+    margin: 0;
+  }
+  .count-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: var(--accent);
+    width: 40px;
+    text-align: right;
+    font-weight: 600;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 18px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+    letter-spacing: 0.01em;
+    box-shadow: 0 4px 20px rgba(255, 91, 31, 0.25);
+  }
+  .submit-btn:hover {
+    background: #ff6a30;
+    box-shadow: 0 6px 28px rgba(255, 91, 31, 0.35);
+    transform: translateY(-1px);
+  }
+  .submit-btn:disabled {
+    background: var(--bg-soft);
+    color: var(--ink-mute);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .preview-box {
+    background: var(--bg-input);
+    border: 1px dashed var(--line-bright);
+    padding: 12px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    word-break: break-word;
+    white-space: pre-wrap;
+    max-height: 140px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+  }
+  .preview-box.empty { color: var(--ink-mute); font-style: italic; }
+
+  .results { padding: 32px 40px; overflow-y: auto; }
+
+  .results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 18px;
+  }
+  .results-title h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 400;
+    margin-bottom: 2px;
+  }
+  .results-title p {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .results-actions { display: flex; gap: 8px; }
+  .icon-btn {
+    background: transparent;
+    border: 1px solid var(--line-bright);
+    color: var(--ink-soft);
+    padding: 8px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .icon-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 1 / 1;
+    position: relative;
+    transition: all 0.25s;
+  }
+  .card:hover {
+    border-color: var(--accent-soft);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  }
+  .card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .card .overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, transparent 55%);
+    opacity: 0;
+    transition: opacity 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 14px;
+  }
+  .card:hover .overlay { opacity: 1; }
+  .card .overlay-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .card .overlay button {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    border-radius: 4px;
+    backdrop-filter: blur(8px);
+    transition: background 0.15s;
+  }
+  .card .overlay button:hover { background: var(--accent); border-color: var(--accent); }
+  .card .badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.7);
+    color: var(--ink-soft);
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    backdrop-filter: blur(8px);
+  }
+
+  .card.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border: 2px solid var(--line);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .card.loading .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .card.error {
+    background: #fdf0f3;
+    border-color: var(--err);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 16px;
+  }
+  .card.error .label {
+    color: var(--err);
+    font-size: 12px;
+    word-break: break-word;
+  }
+
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--ink-mute);
+  }
+  .empty-state h3 {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 28px;
+    margin-bottom: 8px;
+    color: var(--ink-soft);
+  }
+  .empty-state p {
+    font-size: 13px;
+    max-width: 420px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  .modal-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 26, 31, 0.4);
+    backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 32px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+  .modal h3 {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+  .modal p {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 18px;
+    line-height: 1.6;
+  }
+  .modal .btn-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+  .modal button {
+    padding: 10px 18px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    border: 1px solid var(--line-bright);
+    background: transparent;
+    color: var(--ink);
+    transition: all 0.15s;
+  }
+  .modal button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .modal button:hover { border-color: var(--accent); }
+
+  /* 模式切換頂部 (生成 / 改圖) */
+  .top-mode {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--bg-input);
+    border: 1px solid var(--line-bright);
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 24px;
+  }
+  .top-mode button {
+    background: transparent;
+    border: none;
+    color: var(--ink-soft);
+    padding: 12px;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: all 0.2s;
+  }
+  .top-mode button.active {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 500;
+  }
+
+  /* 上傳區 */
+  .upload-zone {
+    border: 2px dashed var(--line-bright);
+    border-radius: 8px;
+    padding: 24px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg-input);
+    margin-bottom: 12px;
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+  }
+  .upload-zone .upload-icon {
+    font-size: 28px;
+    color: var(--ink-mute);
+    margin-bottom: 8px;
+  }
+  .upload-zone .upload-title {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .upload-zone .upload-sub {
+    font-size: 11px;
+    color: var(--ink-mute);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .upload-zone input[type="file"] { display: none; }
+
+  /* 上傳預覽列 */
+  .uploaded-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .uploaded-item {
+    position: relative;
+    width: 72px;
+    height: 72px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--line-bright);
+  }
+  .uploaded-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .uploaded-item .remove {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.75);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .uploaded-item .remove:hover { background: var(--err); }
+
+  /* 改圖任務型態 chips */
+  .task-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  /* 顯示/隱藏 */
+  .hidden { display: none !important; }
+
+  /* 引擎切換 pill (在 header 內) */
+  .engine-select {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px;
+    background: var(--bg-input);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+  }
+  .engine-pill {
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    color: var(--ink-soft);
+    border: none;
+    background: transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .engine-pill:hover { color: var(--ink); }
+  .engine-pill.active {
+    background: var(--ink);
+    color: var(--bg-card);
+    font-weight: 500;
+  }
+  .engine-pill .emoji { font-size: 12px; }
+
+  /* 引擎資訊 banner */
+  .engine-banner {
+    background: var(--accent-bg);
+    border: 1px solid rgba(255, 91, 31, 0.15);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 20px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .engine-banner .icon {
+    font-size: 16px;
+    line-height: 1;
+    margin-top: 2px;
+  }
+  .engine-banner strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .engine-banner .tip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+    display: block;
+  }
+
+  /* 修改 modal 中的多 tab */
+  .modal .tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 20px;
+  }
+  .modal .tabs button {
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    color: var(--ink-mute);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    transition: all 0.15s;
+  }
+  .modal .tabs button.active {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+    font-weight: 500;
+  }
+  .modal .tab-panel { display: none; }
+  .modal .tab-panel.active { display: block; }
+
+  .key-status-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    margin-top: 8px;
+  }
+  .key-status-line .st-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--err);
+  }
+  .key-status-line .st-dot.ok { background: var(--ok); }
+
+  /* 共用 Key box */
+  .shared-key-box {
+    background: linear-gradient(135deg, rgba(255,91,31,0.04), rgba(255,91,31,0.08));
+    border: 1px solid rgba(255,91,31,0.2);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: -8px 0 0 0;
+  }
+  .shared-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .shared-icon { font-size: 20px; }
+  .shared-title-block { flex: 1; }
+  .shared-title {
+    font-size: 14px;
+    color: var(--ink);
+    font-weight: 500;
+    line-height: 1.2;
+  }
+  .shared-desc {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-mute);
+    margin-top: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .shared-warn {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(255,91,31,0.25);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+  .shared-warn strong { color: var(--err); font-weight: 600; }
+
+  /* Toggle switch */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: var(--line-bright);
+    transition: 0.2s;
+    border-radius: 22px;
+  }
+  .slider::before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.2s;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .switch input:checked + .slider { background-color: var(--accent); }
+  .switch input:checked + .slider::before { transform: translateX(18px); }
+
+  /* ═══════ AI 策劃流程專用樣式 ═══════ */
+
+  /* 主要 CTA 按鈕(策劃) */
+  .plan-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: #fff;
+    border: none;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 17px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+    letter-spacing: 0.01em;
+    box-shadow: 0 4px 18px rgba(124, 58, 237, 0.28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .plan-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #8b46f0, #b866f9);
+    box-shadow: 0 6px 24px rgba(124, 58, 237, 0.4);
+    transform: translateY(-1px);
+  }
+  .plan-btn:disabled {
+    background: var(--bg-soft);
+    color: var(--ink-mute);
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .plan-btn .sparkle {
+    font-size: 20px;
+    animation: sparklePulse 2s ease-in-out infinite;
+  }
+  @keyframes sparklePulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.85; }
+  }
+
+  /* 策劃結果卡片 grid */
+  .plan-results {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .plan-results::-webkit-scrollbar { width: 6px; }
+  .plan-results::-webkit-scrollbar-thumb { background: var(--line-bright); border-radius: 3px; }
+
+  .plan-card {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .plan-card:hover {
+    border-color: var(--accent-soft);
+    background: #fffdf9;
+  }
+  .plan-card.selected {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+  }
+  .plan-card .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-mute);
+    font-weight: 600;
+    flex-shrink: 0;
+    padding-top: 2px;
+    min-width: 22px;
+  }
+  .plan-card .check {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--line-bright);
+    border-radius: 4px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.15s;
+    margin-top: 1px;
+  }
+  .plan-card.selected .check {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .plan-card .body { flex: 1; min-width: 0; }
+  .plan-card .title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 2px;
+    line-height: 1.35;
+  }
+  .plan-card .reason {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+  .plan-card .prompt-peek {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-mute);
+    line-height: 1.5;
+    background: var(--bg-input);
+    padding: 6px 8px;
+    border-radius: 4px;
+    border: 1px dashed var(--line);
+    max-height: 3.6em;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    transition: max-height 0.2s;
+  }
+  .plan-card .prompt-peek.expanded {
+    max-height: none;
+    display: block;
+    -webkit-line-clamp: unset;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  .plan-card .prompt-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    align-items: center;
+  }
+  .plan-card .prompt-action {
+    background: transparent;
+    border: 1px solid var(--line-bright);
+    color: var(--ink-soft);
+    padding: 3px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s;
+  }
+  .plan-card .prompt-action:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .plan-toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .plan-toolbar button {
+    background: transparent;
+    border: 1px solid var(--line-bright);
+    color: var(--ink-soft);
+    padding: 5px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+  .plan-toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+
+  .plan-empty {
+    padding: 36px 18px;
+    text-align: center;
+    color: var(--ink-mute);
+    font-size: 12.5px;
+    line-height: 1.7;
+    border: 1px dashed var(--line-bright);
+    border-radius: 8px;
+    margin-bottom: 14px;
+  }
+  .plan-empty .icon {
+    font-size: 28px;
+    display: block;
+    margin-bottom: 10px;
+    opacity: 0.6;
+  }
+
+  .plan-loading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 22px 16px;
+    background: var(--bg-input);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-bottom: 14px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+  .plan-loading .spinner-sm {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--line-bright);
+    border-top-color: #7c3aed;
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+    flex-shrink: 0;
+  }
+
+  /* 進階手動摺疊區 */
+  .advanced-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--bg-input);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+    margin-bottom: 12px;
+  }
+  .advanced-toggle:hover { border-color: var(--line-bright); }
+  .advanced-toggle .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .advanced-toggle .caret {
+    color: var(--ink-mute);
+    font-size: 12px;
+    transition: transform 0.2s;
+  }
+  .advanced-toggle.open .caret { transform: rotate(180deg); }
+  .advanced-panel { display: none; }
+  .advanced-panel.open { display: block; }
+
+  /* 品牌調性 chip 群 */
+  .tone-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  /* 生圖引擎選擇(策劃階段之後才顯示)*/
+  .exec-engine {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    margin-bottom: 10px;
+  }
+  .exec-engine .label {
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .exec-engine .sel {
+    background: transparent;
+    border: none;
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+  .exec-engine .sel:focus { outline: 1px solid var(--accent); }
+
+  /* 圖片卡下方的場景標題 */
+  .card .scene-label {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.72);
+    color: #fff;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    backdrop-filter: blur(8px);
+    text-align: center;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .card:hover .scene-label { opacity: 1; }
+
+  /* PDF 上傳 */
+  .pdf-upload-btn {
+    display: inline-block;
+    background: transparent;
+    border: 1px solid var(--line-bright);
+    color: var(--ink-soft);
+    padding: 5px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+    vertical-align: middle;
+  }
+  .pdf-upload-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .upload-row {
+    display: flex;
+    gap: 6px;
+    margin: 6px 0 4px;
+    flex-wrap: wrap;
+  }
+
+  /* 優惠截圖預覽小圖 */
+  .promo-img-preview {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 6px 0;
+  }
+  .promo-img-preview:empty { display: none; }
+  .promo-img-preview .thumb {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid var(--line-bright);
+    background: var(--bg-input);
+  }
+  .promo-img-preview .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .promo-img-preview .thumb .rm {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 16px;
+    height: 16px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    border-radius: 50%;
+    font-size: 10px;
+    line-height: 16px;
+    text-align: center;
+    cursor: pointer;
+    border: none;
+  }
+  .pdf-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-mute);
+    margin: 4px 0 8px;
+    min-height: 14px;
+  }
+  .pdf-status.loading { color: #7c3aed; }
+  .pdf-status.success { color: var(--ok); }
+  .pdf-status.error { color: var(--err); }
+
+  /* ═══════ 人像 · 文案模組 ═══════ */
+
+  /* 開關 row(標籤 + 開關按鈕右對齊)*/
+  .switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    margin-bottom: 10px;
+  }
+  .switch-row .lb {
+    font-size: 13px;
+    color: var(--ink);
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  .switch-row .lb small {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-mute);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 3px;
+  }
+
+  /* 模組(人像 / 文案)- 可展開/收合的 sub-section */
+  .sub-module {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 14px;
+    background: var(--bg-card);
+    display: none;
+  }
+  .sub-module.active { display: block; }
+
+  /* 人像模式切換(基本 / 進階)*/
+  .persona-mode {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--bg-input);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 3px;
+    margin-bottom: 12px;
+  }
+  .persona-mode button {
+    background: transparent;
+    border: none;
+    color: var(--ink-soft);
+    padding: 7px;
+    font-family: inherit;
+    font-size: 11.5px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s;
+  }
+  .persona-mode button.active {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 500;
+  }
+
+  /* 人像 chip 群(每組)- 更緊湊 */
+  .persona-group {
+    margin-bottom: 10px;
+  }
+  .persona-group-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 5px;
+  }
+  .persona-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .persona-chips .chip {
+    padding: 5px 10px;
+    font-size: 11.5px;
+    border-radius: 100px;
+  }
+
+  /* 策劃 LLM 選擇 */
+  .planner-llm-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, rgba(124,58,237,0.05), rgba(168,85,247,0.05));
+    border: 1px solid rgba(124,58,237,0.15);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+  .planner-llm-row .lb { color: var(--ink-soft); }
+  .planner-llm-row select {
+    background: transparent;
+    border: none;
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    cursor: pointer;
+    padding: 3px 6px;
+    border-radius: 3px;
+    margin-bottom: 0;
+    width: auto;
+  }
+  .planner-llm-row select:focus { outline: 1px solid #7c3aed; }
+
+  /* 文案擷取的 preview 顯示 */
+  .copy-highlights {
+    margin-top: 10px;
+    padding: 10px;
+    background: var(--bg-input);
+    border: 1px dashed var(--line-bright);
+    border-radius: 5px;
+    font-size: 11.5px;
+    line-height: 1.6;
+    display: none;
+  }
+  .copy-highlights.show { display: block; }
+  .copy-highlights .kv {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 3px;
+  }
+  .copy-highlights .kv-edit {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+  .copy-highlights .kv-edit .k {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    flex-shrink: 0;
+    min-width: 40px;
+  }
+  .copy-highlights .kv-edit input {
+    flex: 1;
+    padding: 4px 8px;
+    font-size: 11.5px;
+    border: 1px solid var(--line);
+    background: var(--bg-card);
+    border-radius: 3px;
+    color: var(--ink);
+    margin: 0;
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+  .copy-highlights .kv-edit input:focus {
+    outline: 1px solid var(--accent);
+    border-color: var(--accent);
+  }
+  .copy-highlights .k {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    flex-shrink: 0;
+    min-width: 40px;
+    padding-top: 2px;
+  }
+  .copy-highlights .v {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  @media (max-width: 960px) {
+    main { grid-template-columns: 1fr; }
+    .panel {
+      position: static;
+      max-height: none;
+      border-right: none;
+      border-bottom: 1px solid var(--line);
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>Butterball</h1>
+    <span id="brandSub">Multi-engine · v7</span>
+  </div>
+
+  <div class="api-status">
+    <div class="dot" id="apiDot"></div>
+    <span id="apiStatusText">未連線</span>
+    <button onclick="openKeyModal()">設定 API Key</button>
+  </div>
+</header>
+
+<main>
+  <div class="panel">
+
+    <!-- ═══════ AI 策劃素材包(主流程)═══════ -->
+    <div class="section">
+      <div class="section-label">✨ AI 電商素材策劃</div>
+
+      <!-- 產品圖上傳 -->
+      <label>產品圖 <small>選填,有圖 AI 能更精準判斷</small></label>
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" style="padding:18px 16px;margin-bottom:10px;">
+        <div class="upload-icon" style="font-size:22px;margin-bottom:4px;">📷</div>
+        <div class="upload-title">點擊或拖曳產品圖</div>
+        <div class="upload-sub">最多 4 張 · PNG/JPG/WEBP</div>
+        <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" multiple />
+      </div>
+      <div class="uploaded-list" id="uploadedList"></div>
+
+      <!-- 產品介紹 -->
+      <label>
+        產品介紹 <span class="req">*</span> <small>越詳細 AI 越懂,或用下方 AI 識圖上傳</small>
+      </label>
+      <div class="upload-row">
+        <button type="button" class="pdf-upload-btn" onclick="document.getElementById('pdfInput').click()">
+          📄 上傳 PDF
+        </button>
+        <button type="button" class="pdf-upload-btn" onclick="document.getElementById('imgOcrInput').click()">
+          🖼️ 上傳圖片 / 截圖
+        </button>
+        <input type="file" id="pdfInput" accept="application/pdf" style="display:none;" />
+        <input type="file" id="imgOcrInput" accept="image/*" multiple style="display:none;" />
+      </div>
+      <div id="pdfStatus" class="pdf-status"></div>
+      <textarea id="productDesc" placeholder="例:OGUMA 柔絲蛋白潔顏精露 — 天然頂級蠶絲蛋白,分子大小為膠原蛋白的 1/20,膠狀質地遇肌膚自動轉化為絲滑保養液,茉莉花香。適合輕熟齡女性,強調洗臉+保養雙功能與紓壓儀式感。&#10;&#10;或者直接用上方按鈕上傳:&#10;• PDF(文字型或圖片型都可以)&#10;• 圖片/截圖(產品頁截圖、成分表、DM、Menu 等)&#10;AI 會自動辨識內容並填入。" style="min-height:110px;"></textarea>
+
+      <!-- 品牌調性 -->
+      <label>品牌調性</label>
+      <div class="tone-chips" id="toneChips">
+        <button class="chip" data-tone="__AI__">🤖 AI 決定</button>
+        <button class="chip active" data-tone="輕奢療癒 · 精緻儀式感 · 高質感取向">輕奢療癒</button>
+        <button class="chip" data-tone="親民日常 · 輕鬆愉悅 · 平價實用取向">親民日常</button>
+        <button class="chip" data-tone="年輕活潑 · 潮流時尚 · Gen-Z 語彙">年輕活潑</button>
+        <button class="chip" data-tone="專業科技 · 效能導向 · 現代簡約">專業科技</button>
+        <button class="chip" data-tone="自然溫暖 · 手作感 · 家庭生活氛圍">自然溫暖</button>
+        <button class="chip" data-tone="極簡質感 · 大量留白 · 高級冷冽">極簡質感</button>
+        <button class="chip" data-tone="復古懷舊 · 手繪感 · 溫暖褪色調">復古懷舊</button>
+        <button class="chip" data-tone="sweet feminine pastel palette, dreamy soft pink and cream tones, kawaii aesthetic, gentle romantic mood, 甜美粉嫩少女系">甜美粉嫩</button>
+        <button class="chip" data-tone="urban street style, bold graphic design, high contrast, edgy youth culture, rebellious energy, 潮流街頭個性酷帥">潮流街頭</button>
+        <button class="chip" data-tone="festive celebratory Chinese aesthetic, warm red and gold palette, prosperity symbols, auspicious mood, 節慶喜氣中式紅金">節慶喜氣</button>
+        <button class="chip" data-tone="sunny outdoor active lifestyle, dynamic energetic composition, vibrant natural colors, athletic vitality, 陽光戶外活力運動">陽光活力</button>
+        <button class="chip" data-tone="ultra-luxury sophisticated aesthetic, deep black and gold palette, refined premium atmosphere, exclusivity, 高端精品奢華黑金">高端精品</button>
+        <button class="chip" data-tone="Japanese lifestyle aesthetic, natural wood and linen textures, muted earth palette, quiet daily beauty, 日系雜貨 MUJI 感">日系雜貨</button>
+        <button class="chip" data-tone="Korean K-pop pop aesthetic, glossy vibrant colors, trendy studio lighting, idol-inspired glamour, 韓系 K-pop 青春偶像">韓系 K-pop</button>
+        <button class="chip" data-tone="professional trustworthy corporate aesthetic, clean composition, deep navy and warm gold accents, dependable authority, 專業信賴金融保險">專業信賴</button>
+        <button class="chip" data-tone="artisanal handmade warmth, hand-drawn illustration texture, imperfect charm, personal storytelling mood, 手作溫暖手繪質感">手作溫暖</button>
+        <button class="chip" data-tone="cyberpunk futuristic aesthetic, neon glowing accents, holographic elements, digital sci-fi mood, 賽博未來科幻感">賽博未來</button>
+      </div>
+
+      <!-- 策劃張數 -->
+      <label>策劃張數</label>
+      <div class="count-row" style="margin-bottom:14px;">
+        <input type="range" id="planCount" min="3" max="12" value="8" />
+        <div class="count-display" id="planCountDisplay">8</div>
+      </div>
+
+      <!-- ═══ 人像模組 ═══ -->
+      <div class="switch-row">
+        <div class="lb">
+          需要人像模特兒?
+          <small>加入模特兒能提升情境代入感</small>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="personaToggle" onchange="togglePersona()" />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="sub-module" id="personaModule">
+        <!-- 有模特兒的張數比例 -->
+        <label>有模特兒張數 <small>其他張純產品/氛圍照</small></label>
+        <div class="count-row" style="margin-bottom:12px;">
+          <input type="range" id="personaCount" min="1" max="12" value="6" />
+          <div class="count-display" id="personaCountDisplay">6</div>
+        </div>
+
+        <!-- 基本 / 進階 切換 -->
+        <div class="persona-mode">
+          <button id="personaModeBasic" class="active" onclick="setPersonaMode('basic')">基本點選</button>
+          <button id="personaModeAdvanced" onclick="setPersonaMode('advanced')">進階自由描述</button>
+        </div>
+
+        <!-- 基本點選(chip 群)-->
+        <div id="personaBasic">
+          <div class="persona-group">
+            <div class="persona-group-label">性別</div>
+            <div class="persona-chips" data-group="gender">
+              <button class="chip" data-val="__AI__">🤖 AI</button>
+              <button class="chip active" data-val="female">女</button>
+              <button class="chip" data-val="male">男</button>
+              <button class="chip" data-val="androgynous">中性 / 無性別</button>
+            </div>
+          </div>
+
+          <div class="persona-group">
+            <div class="persona-group-label">年齡層</div>
+            <div class="persona-chips" data-group="age">
+              <button class="chip" data-val="__AI__">🤖 AI</button>
+              <button class="chip" data-val="bright youthful energy, 20-28 years old, fresh vibrant look">青春 20s</button>
+              <button class="chip" data-val="polished mature elegance, 28-38 years old, sophisticated career look">輕熟 30s</button>
+              <button class="chip" data-val="refined confident maturity, 38-48 years old, seasoned graceful presence">成熟 40s</button>
+              <button class="chip" data-val="silver hair elegant senior, 50+ years old, dignified graceful aging">銀髮 50+</button>
+              <button class="chip" data-val="warm maternal presence, 30-40 years old, gentle mother-like aura">母親形象</button>
+            </div>
+          </div>
+
+          <div class="persona-group">
+            <div class="persona-group-label">臉部風格 / 地域感</div>
+            <div class="persona-chips" data-group="ethnicity">
+              <button class="chip" data-val="__AI__">🤖 AI</button>
+              <button class="chip" data-val="East Asian features, natural Taiwanese Chinese facial structure">亞洲東方感</button>
+              <button class="chip" data-val="soft Japanese features, refined kawaii aesthetic, gentle contours">日系甜美</button>
+              <button class="chip" data-val="refined Korean features, sculpted V-line jaw, glowing skin, K-beauty aesthetic">韓系精緻</button>
+              <button class="chip" data-val="European Caucasian features, defined facial structure, Western aesthetic">歐美立體</button>
+              <button class="chip" data-val="Eurasian mixed features, blended East-West aesthetic, unique striking look">亞洲混血</button>
+              <button class="chip" data-val="Latin American features, warm expressive eyes, vibrant charisma">拉丁熱情</button>
+            </div>
+          </div>
+
+          <div class="persona-group">
+            <div class="persona-group-label">骨架體型</div>
+            <div class="persona-chips" data-group="body">
+              <button class="chip" data-val="__AI__">🤖 AI</button>
+              <button class="chip" data-val="average balanced proportions, natural realistic body">一般標準</button>
+              <button class="chip" data-val="tall and slender, elongated legs, 9-head figure proportion">高挑骨感</button>
+              <button class="chip" data-val="petite compact frame, delicate smaller build">迷你嬌小</button>
+              <button class="chip" data-val="toned athletic build with squared shoulders">結實線條</button>
+              <button class="chip" data-val="plus-size curvy silhouette with confident presence">大碼豐滿</button>
+              <button class="chip" data-val="hourglass silhouette with prominent clavicles">腰臀分明</button>
+              <button class="chip" data-val="maternity body with elegant belly, expectant mother figure">孕婦身型</button>
+            </div>
+          </div>
+
+          <div class="persona-group">
+            <div class="persona-group-label">臉部輪廓</div>
+            <div class="persona-chips" data-group="face">
+              <button class="chip" data-val="__AI__">🤖 AI</button>
+              <button class="chip" data-val="high cheekbones and sharp chiseled jawline, minimalist facial features">高級冷冽</button>
+              <button class="chip" data-val="soft rounded face with warm approachable features, gentle smile lines">親切鄰家</button>
+              <button class="chip" data-val="deep-set eyes, aquiline nose, plump pouting lips">深邃立體</button>
+              <button class="chip" data-val="freckles across nose, tooth gap, mole under the eye">辨識度細節</button>
+            </div>
+          </div>
+
+          <div class="persona-group">
+            <div class="persona-group-label">膚色</div>
+            <div class="persona-chips" data-group="skin">
+              <button class="chip" data-val="__AI__">🤖 AI</button>
+              <button class="chip" data-val="natural East Asian skin tone, healthy warm undertone">亞洲一般膚色</button>
+              <button class="chip" data-val="fair porcelain skin">冷白皮</button>
+              <button class="chip" data-val="warm ivory skin tone">暖白皮</button>
+              <button class="chip" data-val="sunkissed bronzed skin">健康小麥色</button>
+              <button class="chip" data-val="rich ebony skin with radiant glow">深邃黑檀木</button>
+            </div>
+          </div>
+
+          <div class="persona-group">
+            <div class="persona-group-label">髮型</div>
+            <div class="persona-chips" data-group="hair">
+              <button class="chip" data-val="__AI__">🤖 AI</button>
+              <button class="chip" data-val="blunt bob with sleek finish">極簡齊短髮</button>
+              <button class="chip" data-val="wavy long tresses with natural movement">微捲浪潮長髮</button>
+              <button class="chip" data-val="buzz cut, clean minimalist">俐落寸頭</button>
+              <button class="chip" data-val="natural curly texture, voluminous">自然捲曲蓬鬆</button>
+              <button class="chip" data-val="long straight hair with high-shine finish">直順長髮</button>
+              <button class="chip" data-val="sleek high ponytail, polished professional look">高馬尾</button>
+              <button class="chip" data-val="long hair with airy wispy fringe, Korean bang style">空氣瀏海長髮</button>
+              <button class="chip" data-val="Korean-style perm waves, soft romantic curls">韓系羊毛捲</button>
+              <button class="chip" data-val="hair bun on top of head, casual chic updo">丸子頭</button>
+            </div>
+          </div>
+
+          <div class="persona-group">
+            <div class="persona-group-label">氣質風格</div>
+            <div class="persona-chips" data-group="vibe">
+              <button class="chip" data-val="__AI__">🤖 AI</button>
+              <button class="chip" data-val="high-fashion edgy aura, distant cool gaze, aloof editorial mood">高級厭世</button>
+              <button class="chip" data-val="commercial approachable warmth, bright genuine smile, girl-next-door charm">商業親和</button>
+              <button class="chip" data-val="androgynous non-binary vibe, blurring gender lines, striking presence">中性張力</button>
+              <button class="chip" data-val="soft dreamy romantic aura, tender expression">柔美夢幻</button>
+              <button class="chip" data-val="minimalist Nordic clean look, quiet confidence">北歐簡約</button>
+              <button class="chip" data-val="professional executive presence, confident authoritative aura, business polish">專業幹練</button>
+              <button class="chip" data-val="sporty energetic vibe, active dynamic movement, healthy vitality">運動陽光</button>
+              <button class="chip" data-val="literary academic charm, quiet intellectual bookish aura, thoughtful gaze">學院文青</button>
+              <button class="chip" data-val="mysterious aloof allure, enigmatic distant expression, magnetic presence">神祕高冷</button>
+            </div>
+          </div>
+
+          <div class="persona-group">
+            <div class="persona-group-label">服裝場景</div>
+            <div class="persona-chips" data-group="outfit">
+              <button class="chip" data-val="__AI__">🤖 AI</button>
+              <button class="chip" data-val="casual comfortable home wear, cozy loungewear">家居休閒</button>
+              <button class="chip" data-val="business office attire, professional workwear, blazer or shirt">上班職場</button>
+              <button class="chip" data-val="activewear athletic sportswear, gym or yoga outfit">運動裝</button>
+              <button class="chip" data-val="beach vacation resort wear, breezy summer outfit">度假海邊</button>
+              <button class="chip" data-val="bridal formal wedding gown, elegant ceremony attire">婚紗禮服</button>
+              <button class="chip" data-val="traditional Chinese qipao or hanbok, cultural heritage costume">傳統服飾</button>
+              <button class="chip" data-val="street style trendy fashion, urban casual outfit">街頭時尚</button>
+              <button class="chip" data-val="tasteful modest swimwear, resort pool setting" title="⚠️ 可能觸發 safety filter,建議用 Gemini 引擎生成">泳裝 ⚠️</button>
+              <button class="chip" data-val="tasteful lingerie campaign styling, elegant intimate wear, editorial fashion context" title="⚠️ 可能觸發 safety filter,建議用 Gemini 引擎生成">內衣廣告 ⚠️</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 進階自由描述 -->
+        <div id="personaAdvanced" style="display:none;">
+          <label>自由描述模特兒外型</label>
+          <textarea id="personaFree" placeholder="例:亞洲女性,25 歲左右,長直髮,單眼皮,笑容溫暖,身穿米白色針織衫,有夏日日系少女感" style="min-height:100px;"></textarea>
+          <div style="font-size:11px;color:var(--ink-mute);line-height:1.6;">
+            💡 這段會直接串進 prompt。可寫年齡、國籍、體型、臉部特徵、服裝、氣質等。
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ 品牌/促銷重點模組 ═══ -->
+      <div class="switch-row">
+        <div class="lb">
+          需要文字 / 標語?
+          <small>AI 自動擷取品牌重點與 CTA 融入視覺</small>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="copyToggle" onchange="toggleCopy()" />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="sub-module" id="copyModule">
+        <label>
+          品牌 / 促銷重點
+          <button type="button" class="pdf-upload-btn" onclick="document.getElementById('promoImgInput').click()" style="margin-left:8px;">
+            🎁 上傳優惠資訊截圖
+          </button>
+          <input type="file" id="promoImgInput" accept="image/*" multiple style="display:none;" />
+        </label>
+        <div id="promoImgStatus" class="pdf-status"></div>
+        <div id="promoImgPreview" class="promo-img-preview"></div>
+        <textarea id="copyText" placeholder="促銷檔期(例):【僅限 48HR】全館 8 折,結帳輸入 SAVE20,買一送一再享免運&#10;&#10;品牌強調(例):100% 蠶絲蛋白 · 分子小 20 倍 · 日本製造 · 敏感肌可用 · 通過 SGS 認證&#10;&#10;或直接上傳優惠截圖,AI 會幫你抓文字+贈品外觀。" style="min-height:110px;"></textarea>
+
+        <label>字體風格</label>
+        <div class="chips" id="fontChips">
+          <button class="chip active" data-font="AI decides">🤖 AI 決定</button>
+          <button class="chip" data-font="clean modern sans-serif typography, minimal and refined">現代無襯線</button>
+          <button class="chip" data-font="elegant serif typography with high-end fashion magazine feel">高級襯線</button>
+          <button class="chip" data-font="hand-drawn playful script typography, casual and warm">手寫感</button>
+          <button class="chip" data-font="rounded chunky bubbly typography, cute and friendly">圓潤可愛</button>
+          <button class="chip" data-font="retro vintage serif with warm nostalgic feel">復古襯線</button>
+          <button class="chip" data-font="bold blocky display type, strong impactful headline">粗黑衝擊</button>
+          <button class="chip" data-font="delicate calligraphy or brush lettering, poetic and refined">書法筆觸</button>
+        </div>
+
+        <!-- 擷取結果預覽(策劃後才顯示)-->
+        <div class="copy-highlights" id="copyHighlights"></div>
+      </div>
+
+      <!-- ═══ 策劃 LLM 選擇 ═══ -->
+      <div class="planner-llm-row">
+        <span class="lb">🧠 策劃師 AI:</span>
+        <select id="plannerLLM">
+          <option value="gemini">Gemini 3.6 Flash · 便宜快</option>
+          <option value="openai">GPT-4o-mini · 中文更精準</option>
+        </select>
+      </div>
+
+      <!-- 策劃按鈕 -->
+      <button class="plan-btn" id="planBtn" onclick="runPlanning()">
+        <span class="sparkle">✨</span>
+        <span>AI 策劃素材包</span>
+      </button>
+    </div>
+
+    <!-- ═══════ 策劃結果區 ═══════ -->
+    <div class="section" id="planResultSection" style="display:none;">
+      <div class="section-label">🎯 AI 策劃結果 · 勾選要生成的</div>
+
+      <div class="plan-toolbar">
+        <span id="planSelectedCount">已選 0 / 0 張</span>
+        <div style="display:flex;gap:6px;">
+          <button onclick="selectAllPlans(true)">全選</button>
+          <button onclick="selectAllPlans(false)">全不選</button>
+        </div>
+      </div>
+
+      <div class="plan-results" id="planResults"></div>
+
+      <!-- 生圖引擎選擇 -->
+      <div class="exec-engine">
+        <span class="label">生圖引擎:</span>
+        <select class="sel" id="execEngine">
+          <option value="gemini-flash">🥉 Nano Banana Flash 2(超省 · 平均 NT$1.2/張)</option>
+          <option value="gemini-pro">🍌 Nano Banana Pro(平衡 · 平均 NT$4.3/張)</option>
+          <option value="openai">🎨 OpenAI gpt-image-2(文字強 · 慢)</option>
+          <option value="openai-sunburst">✨ GPT Image 2.5 Sunburst(最強 · 最貴 · 最慢)</option>
+        </select>
+      </div>
+
+      <!-- 品質與尺寸 -->
+      <div class="two-col">
+        <div>
+          <label>輸出尺寸</label>
+          <select id="size">
+            <option value="1080x1080">1:1 方形 1080 · FB/IG 通用</option>
+            <option value="1080x1350">4:5 直式 1080x1350 · FB/IG feed 推薦</option>
+            <option value="1080x1920">9:16 直向 1080x1920 · Story/Reels</option>
+            <option value="1200x628">16:9 橫幅 1200x628 · FB link/Banner</option>
+            <option value="600x400">3:2 橫幅 600x400 · LINE 小圖廣告</option>
+          </select>
+        </div>
+        <div>
+          <label>品質</label>
+          <select id="quality">
+            <option value="medium" selected>medium — 預設</option>
+            <option value="low">low — 省成本</option>
+            <option value="high">high — 最高品質</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="submit-btn" id="generateBtn" onclick="runGeneration()" style="margin-top:8px;">
+        開始平行生成 →
+      </button>
+
+      <div class="mode-hint" style="margin-top:10px;">
+        ★ 每張獨立 prompt 並行生成:Gemini 引擎同時 6 張、OpenAI 同時 4 張,失敗自動重試 1 次
+      </div>
+    </div>
+
+    <!-- ═══════ 進階手動調整(舊介面摺疊)═══════ -->
+    <div class="section">
+      <div class="advanced-toggle" id="advancedToggle" onclick="toggleAdvanced()">
+        <span class="label">⚙ 進階手動調整</span>
+        <span class="caret">▼</span>
+      </div>
+
+      <div class="advanced-panel" id="advancedPanel">
+
+        <div style="padding:14px 0;color:var(--ink-mute);font-size:11.5px;line-height:1.6;border-bottom:1px solid var(--line);margin-bottom:16px;">
+          💡 這裡是「原本的手動介面」— 適合你想繞過 AI 策劃、自己完整控制 prompt 的情境(例如已經有很明確的視覺想法)。手動模式生成的圖片會顯示在同一個結果區。
+        </div>
+
+        <label id="adv-subjectLabel">主要內容</label>
+        <textarea id="adv-subject" placeholder="例:一隻戴墨鏡的橘貓坐在霓虹招牌下,街頭風"></textarea>
+
+        <label id="adv-sceneLabel">場景 / 背景 <small>選填</small></label>
+        <input type="text" id="adv-scene" placeholder="東京澀谷夜晚的街道,雨後濕漉漉的地面" />
+
+        <label style="margin-top:14px;">視覺風格(選一個)</label>
+        <div class="chips" id="adv-styleChips">
+          <button class="chip active" data-style="">無</button>
+          <button class="chip" data-style="photorealistic, shot on 85mm lens, shallow depth of field, natural lighting, magazine quality">寫實攝影</button>
+          <button class="chip" data-style="cinematic film still, dramatic lighting, anamorphic lens, color graded, movie poster aesthetic">電影感</button>
+          <button class="chip" data-style="anime style illustration, cel shading, vibrant saturated colors, expressive line art">日式動漫</button>
+          <button class="chip" data-style="Studio Ghibli inspired, hand-painted watercolor, warm nostalgic atmosphere, soft pastel palette">吉卜力風</button>
+          <button class="chip" data-style="3D render, octane render, ray tracing, soft global illumination, Pixar-like quality">3D 渲染</button>
+          <button class="chip" data-style="flat vector illustration, geometric shapes, modern minimalist design, bold simple colors">扁平插畫</button>
+          <button class="chip" data-style="watercolor painting, paper texture, organic flowing brush strokes, gentle color bleeds">水彩手繪</button>
+          <button class="chip" data-style="minimalist design, clean composition, plenty of negative space, muted refined palette">極簡主義</button>
+          <button class="chip" data-style="product photography, studio lighting, white seamless background, commercial e-commerce style">商品攝影</button>
+        </div>
+
+        <label>自訂風格描述 <small>會附加在所選風格後</small></label>
+        <textarea id="adv-customStyle" placeholder="例:加上一點故障藝術 glitch art 效果,顆粒感底片質感"></textarea>
+
+        <label style="margin-top:14px;">細化參數</label>
+        <div class="two-col">
+          <div>
+            <label>光線氛圍</label>
+            <select id="adv-lighting">
+              <option value="">— 預設 —</option>
+              <option value="soft natural daylight">自然柔光</option>
+              <option value="golden hour warm sunlight">黃金時刻</option>
+              <option value="dramatic studio lighting">棚拍打光</option>
+              <option value="moody low-key lighting with deep shadows">低調暗影</option>
+              <option value="vibrant neon lighting">霓虹光感</option>
+              <option value="backlit rim lighting">逆光輪廓</option>
+            </select>
+          </div>
+          <div>
+            <label>構圖視角</label>
+            <select id="adv-angle">
+              <option value="">— 預設 —</option>
+              <option value="extreme close-up shot">極特寫</option>
+              <option value="medium close-up portrait">中近景</option>
+              <option value="wide angle establishing shot">廣角全景</option>
+              <option value="high angle bird's eye view">俯視</option>
+              <option value="low angle looking up">仰視</option>
+              <option value="symmetrical centered composition">對稱中心</option>
+            </select>
+          </div>
+          <div>
+            <label>色調</label>
+            <select id="adv-colorTone">
+              <option value="">— 預設 —</option>
+              <option value="warm color palette, amber and gold tones">暖色調</option>
+              <option value="cool color palette, blue and teal tones">冷色調</option>
+              <option value="muted desaturated palette">低飽和</option>
+              <option value="pastel soft palette">粉嫩柔色</option>
+              <option value="earthy natural tones">大地色系</option>
+            </select>
+          </div>
+          <div>
+            <label>負面提示 <small>避免出現</small></label>
+            <input type="text" id="adv-negative" placeholder="文字、浮水印、變形" />
+          </div>
+        </div>
+
+        <label style="margin-top:14px;">產出模式</label>
+        <div class="mode-toggle">
+          <button id="adv-modeBatch" class="active" onclick="setMode('batch')">同 prompt 批次</button>
+          <button id="adv-modeVariant" onclick="setMode('variant')">微變化平行</button>
+        </div>
+        <div class="mode-hint" id="adv-modeHint">
+          ★ 一次 API 呼叫 n=N,速度最快、所有圖共用同一 prompt(構圖會有變化)。
+        </div>
+
+        <label>圖片數量</label>
+        <div class="count-row">
+          <input type="range" id="adv-count" min="1" max="10" value="10" />
+          <div class="count-display" id="adv-countDisplay">10</div>
+        </div>
+
+        <label>品質</label>
+        <select id="adv-quality">
+          <option value="low">low — 最省成本,適合測試</option>
+          <option value="medium" selected>medium — 預設平衡</option>
+          <option value="high">high — 最高品質,費用較高</option>
+        </select>
+
+        <label>輸出尺寸</label>
+        <select id="adv-size">
+          <option value="1024x1024">1:1 方形 (1024)</option>
+          <option value="1536x1024">16:9 橫向 (1536x1024)</option>
+          <option value="1024x1536">9:16 直向 (1024x1536)</option>
+        </select>
+
+        <div class="section-label" style="margin-top:18px;">最終 PROMPT 預覽</div>
+        <div class="preview-box empty" id="adv-promptPreview">填入主體描述後,完整 prompt 會即時顯示在這。</div>
+
+        <button class="submit-btn" onclick="generate()" style="margin-top:8px;">手動生成圖片 →</button>
+
+      </div>
+    </div>
+
+  </div>
+
+
+  <div class="results">
+    <div class="results-header">
+      <div class="results-title">
+        <h2>Generated</h2>
+        <p id="resultMeta">尚未生成</p>
+      </div>
+      <div class="results-actions">
+        <select class="icon-btn" id="batchResizeSelect" style="padding:6px 12px;" title="送 AI 重新構圖以保留完整視覺,會用當前生圖引擎">
+          <option value="">🧠 AI 重生到其他尺寸...</option>
+          <option value="1080x1080">1:1 方形 1080</option>
+          <option value="1080x1350">4:5 直式 1080x1350</option>
+          <option value="1080x1920">9:16 直向 1080x1920</option>
+          <option value="1200x628">16:9 橫幅 1200x628</option>
+          <option value="600x400">3:2 橫幅 600x400 · LINE</option>
+        </select>
+        <button class="icon-btn" id="downloadAllBtn" disabled onclick="downloadAll()">📦 打包 ZIP 下載</button>
+        <button class="icon-btn" id="clearBtn" disabled onclick="clearResults()">✕ 清空</button>
+      </div>
+    </div>
+
+    <div class="grid" id="grid">
+      <div class="empty-state">
+        <h3>Ready when you are.</h3>
+        <p>填入主體描述、選擇風格、調整參數,然後按「生成圖片」。<br/>第一次使用請先按右上角「設定 API Key」貼入你的 OpenAI Key。</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="modal-bg" id="keyModal">
+  <div class="modal">
+    <h3>API Key 管理</h3>
+
+    <!-- 共用 Key 狀態區(只在有共用 Key 時顯示)-->
+    <div id="sharedKeyBox" class="shared-key-box" style="display:none;">
+      <div class="shared-header">
+        <span class="shared-icon">🏢</span>
+        <div class="shared-title-block">
+          <div class="shared-title">部門共用 Key</div>
+          <div class="shared-desc" id="sharedKeyDesc">預設啟用,無需自行設定</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="sharedToggle" onchange="toggleShared()" />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="shared-warn">
+        ⚠️ 這份 HTML 內含部門共用 Key,<strong>禁止外傳給部門外的人</strong>。要對外 demo 時請關閉此開關或使用清空版本。
+      </div>
+    </div>
+
+    <p style="margin-top:14px;">個人 Key 只會存在你瀏覽器的 localStorage,可作為共用 Key 停用時的備用。</p>
+
+    <div class="tabs">
+      <button class="active" data-tab="openai" onclick="switchKeyTab('openai')">🎨 OpenAI</button>
+      <button data-tab="gemini" onclick="switchKeyTab('gemini')">🍌 Google Gemini</button>
+    </div>
+
+    <!-- OpenAI tab -->
+    <div class="tab-panel active" id="tab-openai">
+      <label>OpenAI API Key <small>個人備用,從 platform.openai.com/api-keys 取得</small></label>
+      <input type="password" id="apiKeyInput" placeholder="sk-proj-..." />
+      <div class="key-status-line">
+        <div class="st-dot" id="openaiStDot"></div>
+        <span id="openaiStText">未設定</span>
+      </div>
+      <p style="font-size:11px;color:var(--ink-mute);margin-top:14px;margin-bottom:0;line-height:1.6;">
+        ⚠️ gpt-image-2 需要 OpenAI 組織 Verification<br/>
+        ✓ 透過 Vercel Proxy 支援雲端呼叫(無 CORS 限制)
+      </p>
+    </div>
+
+    <!-- Gemini tab -->
+    <div class="tab-panel" id="tab-gemini">
+      <label>Google Gemini API Key <small>個人備用,從 aistudio.google.com/apikey 取得</small></label>
+      <input type="password" id="geminiKeyInput" placeholder="AIza..." />
+      <div class="key-status-line">
+        <div class="st-dot" id="geminiStDot"></div>
+        <span id="geminiStText">未設定</span>
+      </div>
+      <p style="font-size:11px;color:var(--ink-mute);margin-top:14px;margin-bottom:0;line-height:1.6;">
+        ✓ 前端直連 Google API,速度快<br/>
+        ✓ 註冊即可用,不需身份驗證<br/>
+        ✓ 有每日免費額度可先測試
+      </p>
+    </div>
+
+    <div class="btn-row">
+      <button onclick="closeKeyModal()">取消</button>
+      <button class="primary" onclick="saveKeys()">儲存個人 Key</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ═══════════════════════════════════════════════════════════════
+  //  🔑 部門共用 API Key(cacaFly AI 部門專用)
+  //  ─────────────────────────────────────────────────────────────
+  //  ⚠️ 這份 HTML 檔案不可外流!Key 明碼在此,誰拿到都能用。
+  //  ⚠️ 只在部門內部傳遞。要對外 demo 時,把下面兩個字串改回 ''。
+  //  ─────────────────────────────────────────────────────────────
+  //  更換 Key 步驟:直接改雙引號裡面的內容,存檔即可。
+  // ═══════════════════════════════════════════════════════════════
+  const SHARED_OPENAI_KEY = '';   // 貼入 OpenAI Key,sk-... 開頭
+  const SHARED_GEMINI_KEY = '';   // 貼入 Gemini Key,AIza... 開頭
+
+  // 共用 Key 是否啟用(使用者可在 UI 上關閉,改用自己的 Key)
+  // 這個變數存在 localStorage,重新載入頁面會記得
+  function getUseShared() {
+    // 預設啟用;使用者按「清除共用 Key」才會變 false
+    return localStorage.getItem('use_shared_key') !== 'false';
+  }
+  function setUseShared(v) {
+    localStorage.setItem('use_shared_key', v ? 'true' : 'false');
+  }
+
+  // 取得當前實際要用的 Key(共用啟用 → 用 SHARED_ ; 否則用使用者自己的)
+  function getActiveKey(engine) {
+    const useShared = getUseShared();
+    if (engine === 'openai' || engine === 'openai-sunburst') {
+      return useShared && SHARED_OPENAI_KEY ? SHARED_OPENAI_KEY : state.apiKey;
+    } else {
+      // gemini-pro / gemini-flash 共用同一組 Gemini Key
+      return useShared && SHARED_GEMINI_KEY ? SHARED_GEMINI_KEY : state.geminiKey;
+    }
+  }
+
+  function hasSharedKey(engine) {
+    if (engine === 'openai' || engine === 'openai-sunburst') return !!SHARED_OPENAI_KEY;
+    return !!SHARED_GEMINI_KEY;
+  }
+
+
+  const state = {
+    engine: localStorage.getItem('engine') || 'gemini-pro', // 'openai' | 'gemini-pro'
+    apiKey: localStorage.getItem('openai_key') || '',
+    geminiKey: localStorage.getItem('gemini_key') || '',
+    selectedStyle: '',
+    mode: 'batch',
+    topMode: 'generate',
+    selectedTask: 'custom',
+    uploadedFiles: [],
+    images: [],
+  };
+
+  // 引擎資訊表(用於 banner、模型名稱、任務可用性)
+  const ENGINES = {
+    'openai': {
+      name: 'OpenAI · gpt-image-2',
+      emoji: '🎨',
+      brief: '中日文字渲染最強、產品保真穩定,適合需要精準文字的品牌視覺。',
+      tip: '~$0.04-0.17/張 · 需組織 Verification · 透過 Proxy 支援雲端',
+      brandSub: 'gpt-image-2 · 文字生圖',
+      brandSubEdit: 'gpt-image-2 · 改圖模式',
+      sizes: [
+        { value: '1024x1024', label: '1:1 方形 (1024)' },
+        { value: '1536x1024', label: '16:9 橫向 (1536x1024)' },
+        { value: '1024x1536', label: '9:16 直向 (1024x1536)' },
+      ],
+      qualities: [
+        { value: 'low', label: 'low — 最省成本' },
+        { value: 'medium', label: 'medium — 預設', selected: true },
+        { value: 'high', label: 'high — 最高品質' },
+      ],
+      maxRefs: 16,
+    },
+    'openai-sunburst': {
+      name: 'OpenAI · gpt-image-2.5-sunburst',
+      emoji: '✨',
+      brief: '精準版模型,細節控制、campaign-grade 品質,適合最終稿。',
+      tip: '~$30/M image tokens · 最慢最貴 · 透過 Proxy 支援雲端',
+      brandSub: 'gpt-image-2.5-sunburst · 文字生圖',
+      brandSubEdit: 'gpt-image-2.5-sunburst · 改圖模式',
+      sizes: [
+        { value: '1024x1024', label: '1:1 方形' },
+        { value: '1024x1280', label: '4:5 直式' },
+        { value: '1024x1536', label: '9:16 直向' },
+        { value: '1536x1024', label: '16:9 橫向' },
+      ],
+      qualities: [
+        { value: 'low', label: 'low' },
+        { value: 'medium', label: 'medium', selected: true },
+        { value: 'high', label: 'high' },
+      ],
+      maxRefs: 16,
+    },
+    'gemini-flash': {
+      name: 'Google · Nano Banana 2 Flash',
+      emoji: '🥉',
+      brief: '超省成本、超快版本,適合大量草稿與快速迭代測試。',
+      tip: '$0.039/張 · 平均 NT$1.2/張 · 3-4 倍便宜 · 品質稍降',
+      brandSub: 'gemini-3.1-flash-image · 文字生圖',
+      brandSubEdit: 'gemini-3.1-flash-image · 改圖模式',
+      sizes: [
+        { value: '1024x1024', label: '1:1 方形' },
+        { value: '2048x2048', label: '1:1 方形 (2K)' },
+        { value: '1536x1024', label: '16:9 橫向' },
+        { value: '1024x1536', label: '9:16 直向' },
+      ],
+      qualities: [
+        { value: 'standard', label: 'standard — 預設', selected: true },
+      ],
+      maxRefs: 14,
+    },
+    'gemini-pro': {
+      name: 'Google · Nano Banana Pro',
+      emoji: '🍌',
+      brief: '速度快 3-5 倍、原生 4K 輸出、多達 14 張參考圖,適合大量草稿與高解析素材。',
+      tip: '$0.134/張 (1-2K) · $0.24/張 (4K) · 前端可直連 · 註冊即用',
+      brandSub: 'gemini-3-pro-image · 文字生圖',
+      brandSubEdit: 'gemini-3-pro-image · 改圖模式',
+      sizes: [
+        { value: '1024x1024', label: '1:1 方形 (1K)' },
+        { value: '2048x2048', label: '1:1 方形 (2K)' },
+        { value: '1536x1024', label: '16:9 橫向 (2K)' },
+        { value: '1024x1536', label: '9:16 直向 (2K)' },
+        { value: '3840x2160', label: '4K 橫向 ($$$)' },
+      ],
+      qualities: [
+        { value: 'standard', label: 'standard — 預設', selected: true },
+      ],
+      maxRefs: 14,
+    }
+  };
+
+  // ========== 引擎切換 ==========
+  function setEngine(eng) {
+    state.engine = eng;
+    localStorage.setItem('engine', eng);
+    const info = ENGINES[eng];
+
+    // 更新 brand 副標
+    const brandSubEl = document.getElementById('brandSub');
+    if (brandSubEl) brandSubEl.textContent = info.brandSub;
+
+    // 更新 API 連線指示燈
+    updateKeyStatus();
+  }
+
+  // ========== Modal Tab 切換 ==========
+  function switchKeyTab(tab) {
+    document.querySelectorAll('.modal .tabs button').forEach(b =>
+      b.classList.toggle('active', b.dataset.tab === tab)
+    );
+    document.getElementById('tab-openai').classList.toggle('active', tab === 'openai');
+    document.getElementById('tab-gemini').classList.toggle('active', tab === 'gemini');
+  }
+
+  // ========== 頂部模式切換(舊系統,新流程已停用)==========
+  function setTopMode(m) {
+    // 新流程統一為「產品圖改圖」邏輯(有上傳圖時當 edit,沒圖當 generate)
+    // 保留這個函式僅為避免舊呼叫報錯
+    state.topMode = m;
+  }
+
+  // ========== 上傳處理 ==========
+  const uploadZone = document.getElementById('uploadZone');
+  const fileInput = document.getElementById('fileInput');
+
+  fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+  uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('dragover');
+  });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+  uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+  });
+
+  // ═════ PDF 上傳處理 ═════
+  // ═════ PDF 上傳處理(先試文字層,失敗自動轉圖片給 vision LLM 讀)═════
+  document.getElementById('pdfInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    e.target.value = '';
+
+    const status = document.getElementById('pdfStatus');
+    status.className = 'pdf-status loading';
+    status.textContent = `⏳ 讀取 ${file.name} ...`;
+
+    if (!window.pdfjsLib) {
+      status.className = 'pdf-status error';
+      status.textContent = '⚠️ PDF 讀取套件未載入,請重新整理頁面';
+      return;
+    }
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const numPages = pdf.numPages;
+      status.textContent = `⏳ 嘗試提取 ${numPages} 頁文字...`;
+
+      // ── 路線 A:先試文字層 ──
+      let allText = '';
+      for (let i = 1; i <= numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        const pageText = content.items.map(it => it.str).filter(s => s && s.trim()).join(' ');
+        if (pageText.trim()) allText += pageText + '\n\n';
+      }
+      allText = allText.trim();
+
+      if (allText && allText.length > 20) {
+        // 文字層抓到了 → 直接用
+        appendToDesc(allText, file.name);
+        status.className = 'pdf-status success';
+        const preview = allText.length > 60 ? allText.slice(0, 60) + '...' : allText;
+        status.textContent = `✓ 文字型 PDF · 已載入 ${numPages} 頁 · ${allText.length} 字 · ${preview}`;
+        return;
+      }
+
+      // ── 路線 B:文字層失敗 → 每頁 render 成圖 → 送 vision LLM ──
+      status.textContent = `📷 文字層為空 → 轉換 ${numPages} 頁為圖片給 AI 識別...`;
+      const pageImages = [];
+      const maxPages = Math.min(numPages, 8); // 保護:最多 8 頁,避免耗盡 quota
+      for (let i = 1; i <= maxPages; i++) {
+        status.textContent = `📷 渲染第 ${i}/${maxPages} 頁...`;
+        const page = await pdf.getPage(i);
+        // scale 1.5 兼顧清晰度與 payload
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        pageImages.push({ dataUrl, name: `${file.name}-page${i}.jpg` });
+      }
+
+      status.textContent = `🧠 AI 正在識別 ${maxPages} 頁內容...`;
+      const extracted = await visionExtractText(pageImages);
+      if (!extracted || !extracted.trim()) {
+        status.className = 'pdf-status error';
+        status.textContent = '⚠️ AI 讀圖後沒有辨識出可用內容';
+        return;
+      }
+      appendToDesc(extracted, file.name + '(AI 識圖)');
+      status.className = 'pdf-status success';
+      status.textContent = `✓ 圖片型 PDF · AI 已識別 ${maxPages} 頁 · 共 ${extracted.length} 字`;
+    } catch (err) {
+      console.error(err);
+      status.className = 'pdf-status error';
+      status.textContent = `⚠️ 讀取失敗:${(err.message || err).toString().slice(0, 150)}`;
+    }
+  });
+
+  // ═════ 圖片直接上傳處理 ═════
+  document.getElementById('imgOcrInput').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    e.target.value = '';
+
+    const status = document.getElementById('pdfStatus');
+    status.className = 'pdf-status loading';
+    status.textContent = `📷 準備識別 ${files.length} 張圖片...`;
+
+    const maxImgs = Math.min(files.length, 8);
+    const images = [];
+    for (let i = 0; i < maxImgs; i++) {
+      const f = files[i];
+      if (!f.type.startsWith('image/')) continue;
+      const dataUrl = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result);
+        r.onerror = rej;
+        r.readAsDataURL(f);
+      });
+      images.push({ dataUrl, name: f.name });
+    }
+
+    if (images.length === 0) {
+      status.className = 'pdf-status error';
+      status.textContent = '⚠️ 沒有有效的圖片';
+      return;
+    }
+
+    try {
+      status.textContent = `🧠 AI 正在識別 ${images.length} 張圖片內容...`;
+      const extracted = await visionExtractText(images);
+      if (!extracted || !extracted.trim()) {
+        status.className = 'pdf-status error';
+        status.textContent = '⚠️ AI 讀圖後沒有辨識出可用內容';
+        return;
+      }
+      appendToDesc(extracted, `${images.length} 張圖片(AI 識圖)`);
+      status.className = 'pdf-status success';
+      const preview = extracted.length > 60 ? extracted.slice(0, 60) + '...' : extracted;
+      status.textContent = `✓ 已識別 ${images.length} 張 · 共 ${extracted.length} 字 · ${preview}`;
+    } catch (err) {
+      console.error(err);
+      status.className = 'pdf-status error';
+      status.textContent = `⚠️ AI 識別失敗:${(err.message || err).toString().slice(0, 150)}`;
+    }
+  });
+
+  // ═════ 共用:把提取的內容塞進 productDesc ═════
+  function appendToDesc(text, source) {
+    const desc = document.getElementById('productDesc');
+    const cur = desc.value.trim();
+    const marker = `\n\n--- 從 ${source} 匯入 ---\n\n`;
+    desc.value = cur ? cur + marker + text : text;
+  }
+
+  // ═════ 用 vision LLM 讀圖並提取結構化產品資料 ═════
+  async function visionExtractText(imageList) {
+    // imageList: [{ dataUrl, name }]
+    const systemPrompt = `你是產品資訊擷取專家,任務是從使用者提供的圖片(產品官網截圖、DM、包裝、成分表、Menu 或宣傳圖)中,擷取**對電商廣告視覺策劃有價值**的結構化資訊。
+
+## 你需要抓出的資訊(有的就抓,沒有的省略)
+- **產品名稱**(中英文)
+- **品牌名**
+- **核心賣點 / USP**(3-6 個)
+- **成分 / 材質 / 產地 / 認證**
+- **功效 / 使用情境 / 目標客群**
+- **價格 / 檔期 / 優惠碼 / 促銷資訊**
+- **視覺元素**(產品外觀、顏色、包裝形狀)
+- **文案金句 / slogan**
+
+## 輸出格式
+純繁體中文段落,結構化條列。**不要用 markdown 語法**(不要 ##、**)。用簡單的中文標題 + 冒號 + 內容即可。
+例如:
+產品名稱:XXX
+核心賣點:
+- A
+- B
+- C
+成分:...
+
+## 禁忌
+- 只擷取實際看到的內容,不憑空補齊
+- 圖中沒有的資訊直接省略,不要寫「無」或「未提供」
+- 不要有任何前言或結語,直接開始寫`;
+
+    // 判斷用哪個 LLM(跟策劃師一致)
+    const useOpenAI = state.plannerLLM === 'openai';
+    const key = getActiveKey(useOpenAI ? 'openai' : 'gemini-pro');
+    if (!key || key.length < 20) {
+      throw new Error(`需要先設定 ${useOpenAI ? 'OpenAI' : 'Gemini'} API Key`);
+    }
+
+    if (useOpenAI) {
+      // GPT-4o-mini(便宜) — vision 版
+      const userContent = imageList.map(im => ({
+        type: 'image_url',
+        image_url: { url: im.dataUrl }
+      }));
+      userContent.push({ type: 'text', text: '請從這些圖片中擷取產品資訊。' });
+
+      const res = await openaiFetch('/v1/chat/completions', {
+        headers: { 'Content-Type': 'application/json' },
+        apiKey: key,
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userContent }
+          ],
+          temperature: 0.2,
+          max_tokens: 1500
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      return data?.choices?.[0]?.message?.content?.trim() || '';
+    } else {
+      // Gemini Flash — vision
+      const parts = [];
+      for (const im of imageList) {
+        const b64 = im.dataUrl.split(',')[1];
+        const mime = im.dataUrl.match(/data:([^;]+);/)?.[1] || 'image/jpeg';
+        parts.push({ inlineData: { mimeType: mime, data: b64 } });
+      }
+      parts.push({ text: '請從這些圖片中擷取產品資訊。' });
+
+      const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent';
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': key
+        },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ role: 'user', parts }],
+          generationConfig: { temperature: 0.2 }
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    }
+  }
+
+  async function handleFiles(fileList) {
+    const files = Array.from(fileList);
+    const remaining = 4 - state.uploadedFiles.length;
+    if (files.length > remaining) {
+      alert(`最多 4 張,目前還可以再傳 ${remaining} 張`);
+      return;
+    }
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) continue;
+      const dataUrl = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+      state.uploadedFiles.push({ file, dataUrl, name: file.name });
+    }
+    fileInput.value = ''; // 重置,可以重複選同一個檔
+    renderUploaded();
+  }
+
+  function renderUploaded() {
+    const list = document.getElementById('uploadedList');
+    list.innerHTML = state.uploadedFiles.map((f, i) => `
+      <div class="uploaded-item" title="${f.name}">
+        <img src="${f.dataUrl}" alt="${f.name}" />
+        <button class="remove" onclick="removeUpload(${i})">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function removeUpload(i) {
+    state.uploadedFiles.splice(i, 1);
+    renderUploaded();
+  }
+
+  // ========== 改圖任務模板 ==========
+  // 採用官方建議的 Change/Preserve/Constraints 三段結構
+  const taskTemplates = {
+    custom: {
+      hint: '★ 自由描述你想要的改動。產品本身會被保留(由 gpt-image-2 自動辨識)。',
+      build: (userInput, scene, styleParts) => {
+        const parts = [];
+        parts.push(`Change: ${userInput}.`);
+        if (scene) parts.push(`New environment: ${scene}.`);
+        if (styleParts) parts.push(`Style direction: ${styleParts}.`);
+        parts.push('Preserve: the exact product shape, color, label, logo, branding, proportions, and material from the reference image.');
+        parts.push('Constraints: photorealistic integration, accurate lighting and shadows, no distortion or redesign of the product, no extra logos, no watermark.');
+        return parts.join(' ');
+      }
+    },
+    'bg-replace': {
+      hint: '★ 換背景:保留產品,只更換場景。',
+      build: (userInput, scene, styleParts) => {
+        const env = scene || userInput || 'a clean modern studio surface';
+        return [
+          `Change: replace only the background. New background: ${env}.`,
+          styleParts ? `Style direction: ${styleParts}.` : '',
+          'Preserve: the product itself entirely — same shape, color, label, logo, packaging, materials, and exact placement from the reference. Do not redesign or relight the product surface.',
+          'Constraints: realistic shadows and reflections that match the new environment, photorealistic compositing, no watermark, no logo drift, no text changes on the product.'
+        ].filter(Boolean).join(' ');
+      }
+    },
+    'bg-clean': {
+      hint: '★ 乾淨白底電商照:適合上架商品圖。',
+      build: (userInput, scene, styleParts) => [
+        `Change: place the product on a seamless ${userInput || 'pure white (#FFFFFF)'} background, e-commerce product photography style.`,
+        'Lighting: soft even studio lighting, subtle natural ground shadow under the product, no harsh reflections.',
+        styleParts ? `Style direction: ${styleParts}.` : '',
+        'Preserve: the product exactly as shown — every detail of shape, color, label, logo, materials, and proportions.',
+        'Constraints: studio commercial quality, centered composition, no extra props, no watermark, no text additions.'
+      ].filter(Boolean).join(' '),
+    },
+    lifestyle: {
+      hint: '★ 情境使用照:把產品放進真實生活場景。',
+      build: (userInput, scene, styleParts) => [
+        `Change: integrate the product into a lifestyle scene: ${scene || userInput || 'a sunlit modern home interior with a person enjoying the product'}.`,
+        userInput && scene ? `Additional context: ${userInput}.` : '',
+        styleParts ? `Style direction: ${styleParts}.` : 'Style: warm editorial lifestyle photography, shallow depth of field, natural light.',
+        'Preserve: the product itself unchanged — shape, color, label, logo, branding, materials.',
+        'Constraints: photorealistic, believable scale and physics, accurate lighting on product matching the scene, no logo drift, no watermark.'
+      ].filter(Boolean).join(' ')
+    },
+    poster: {
+      hint: '★ 廣告海報:強烈視覺、適合社群廣告投放。',
+      build: (userInput, scene, styleParts) => [
+        `Change: transform into a striking advertising poster featuring the product as hero. Concept: ${userInput || 'bold modern minimalist ad campaign'}.`,
+        scene ? `Setting: ${scene}.` : '',
+        styleParts ? `Style direction: ${styleParts}.` : 'Style: high-end commercial advertising aesthetic, bold composition, dramatic lighting.',
+        'Preserve: the product itself unchanged — shape, color, label, logo, branding.',
+        'Constraints: poster-grade quality, leave clean negative space for headline copy, no actual text rendered unless specified, no watermark.'
+      ].filter(Boolean).join(' ')
+    },
+    social: {
+      hint: '★ 社群素材:Instagram / FB 風格,適合 9:16 或 1:1。',
+      build: (userInput, scene, styleParts) => [
+        `Change: create a scroll-stopping social media post featuring the product. Vibe: ${userInput || 'trendy, eye-catching, gen-Z aesthetic'}.`,
+        scene ? `Setting: ${scene}.` : '',
+        styleParts ? `Style direction: ${styleParts}.` : 'Style: vibrant, contemporary social media aesthetic, clean composition optimized for mobile viewing.',
+        'Preserve: the product itself unchanged — exact shape, color, label, logo, branding.',
+        'Constraints: high engagement visual quality, no watermark, no fake brand text additions.'
+      ].filter(Boolean).join(' ')
+    },
+    restyle: {
+      hint: '★ 換風格:保留產品但用不同藝術風格重繪場景。',
+      build: (userInput, scene, styleParts) => [
+        `Change: render the scene around the product in a new artistic style: ${userInput || styleParts || 'editorial illustration style'}.`,
+        scene ? `Setting: ${scene}.` : '',
+        'Preserve: the product itself recognizably — shape silhouette, color identity, key branding visible.',
+        'Constraints: artistic stylization applies to environment and atmosphere; the product remains identifiable as the original.'
+      ].filter(Boolean).join(' ')
+    }
+  };
+
+  // (taskChips 綁定已移除,新流程沒有此 chip 群)
+
+  function openKeyModal() {
+    document.getElementById('apiKeyInput').value = state.apiKey;
+    document.getElementById('geminiKeyInput').value = state.geminiKey;
+    updateKeyModalStatus();
+
+    // 顯示共用 Key box(有共用 Key 時才顯示)
+    const hasAnyShared = !!SHARED_OPENAI_KEY || !!SHARED_GEMINI_KEY;
+    const box = document.getElementById('sharedKeyBox');
+    if (hasAnyShared) {
+      box.style.display = 'block';
+      const useShared = getUseShared();
+      document.getElementById('sharedToggle').checked = useShared;
+      updateSharedDesc();
+    } else {
+      box.style.display = 'none';
+    }
+
+    // 開 modal 時預設顯示當前引擎的 tab
+    switchKeyTab(state.engine === 'openai' ? 'openai' : 'gemini');
+    document.getElementById('keyModal').classList.add('show');
+  }
+
+  function updateSharedDesc() {
+    const useShared = getUseShared();
+    const openaiHas = !!SHARED_OPENAI_KEY;
+    const geminiHas = !!SHARED_GEMINI_KEY;
+    const engineList = [];
+    if (openaiHas) engineList.push('OpenAI');
+    if (geminiHas) engineList.push('Gemini');
+    const desc = useShared
+      ? `已啟用 · ${engineList.join(' + ')} 共用中`
+      : `已停用 · 改用個人 Key`;
+    document.getElementById('sharedKeyDesc').textContent = desc;
+  }
+
+  function toggleShared() {
+    const on = document.getElementById('sharedToggle').checked;
+    setUseShared(on);
+    updateSharedDesc();
+    updateKeyStatus();
+  }
+  function closeKeyModal() {
+    document.getElementById('keyModal').classList.remove('show');
+  }
+  function saveKeys() {
+    const openaiK = document.getElementById('apiKeyInput').value.trim();
+    const geminiK = document.getElementById('geminiKeyInput').value.trim();
+    state.apiKey = openaiK;
+    state.geminiKey = geminiK;
+    localStorage.setItem('openai_key', openaiK);
+    localStorage.setItem('gemini_key', geminiK);
+    updateKeyStatus();
+    closeKeyModal();
+  }
+
+  // Modal 內部的兩個 Key 狀態小點
+  function updateKeyModalStatus() {
+    const oOk = state.apiKey && state.apiKey.startsWith('sk-');
+    const gOk = state.geminiKey && state.geminiKey.length > 20;
+    document.getElementById('openaiStDot').classList.toggle('ok', oOk);
+    document.getElementById('openaiStText').textContent = oOk
+      ? `已設定 · ${state.apiKey.slice(0, 7)}…${state.apiKey.slice(-4)}` : '未設定';
+    document.getElementById('geminiStDot').classList.toggle('ok', gOk);
+    document.getElementById('geminiStText').textContent = gOk
+      ? `已設定 · ${state.geminiKey.slice(0, 8)}…${state.geminiKey.slice(-4)}` : '未設定';
+  }
+
+  // Header 上的連線狀態(顯示當前引擎的 Key)
+  function updateKeyStatus() {
+    const dot = document.getElementById('apiDot');
+    const text = document.getElementById('apiStatusText');
+    const info = ENGINES[state.engine];
+    const useShared = getUseShared();
+    const usingShared = useShared && hasSharedKey(state.engine);
+    const key = getActiveKey(state.engine);
+    let valid;
+    const isOpenAI = state.engine === 'openai' || state.engine === 'openai-sunburst';
+    if (isOpenAI) {
+      valid = key && key.startsWith('sk-');
+    } else {
+      valid = key && key.length > 20;
+    }
+    if (valid) {
+      dot.classList.add('connected');
+      const label = usingShared ? '共用 Key' : `${key.slice(0, 7)}…${key.slice(-4)}`;
+      text.textContent = `${info.emoji} ${usingShared ? '🏢 ' : ''}${label}`;
+    } else {
+      dot.classList.remove('connected');
+      text.textContent = `${info.emoji} 未設定 ${isOpenAI ? 'OpenAI' : 'Gemini'} Key`;
+    }
+  }
+
+  document.querySelectorAll('#adv-styleChips .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#adv-styleChips .chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      state.selectedStyle = chip.dataset.style;
+      updatePreview();
+    });
+  });
+
+  function setMode(m) {
+    state.mode = m;
+    document.getElementById('adv-modeBatch').classList.toggle('active', m === 'batch');
+    document.getElementById('adv-modeVariant').classList.toggle('active', m === 'variant');
+    const hint = document.getElementById('adv-modeHint');
+    if (m === 'batch') {
+      hint.innerHTML = '★ 一次 API 呼叫 n=N,速度最快、所有圖共用同一 prompt(構圖會有變化)。';
+    } else {
+      hint.innerHTML = '★ N 次平行呼叫,每張附加不同的微變化(角度、光線、色調 seed),變化更明顯。較慢、較貴。';
+    }
+  }
+
+  document.getElementById('adv-count').addEventListener('input', e => {
+    document.getElementById('adv-countDisplay').textContent = e.target.value;
+  });
+
+  function buildPrompt(variantSeed = '') {
+    const subject = document.getElementById('adv-subject').value.trim();
+    if (!subject) return '';
+    const scene = document.getElementById('adv-scene').value.trim();
+    const customStyle = document.getElementById('adv-customStyle').value.trim();
+    const lighting = document.getElementById('adv-lighting').value;
+    const angle = document.getElementById('adv-angle').value;
+    const colorTone = document.getElementById('adv-colorTone').value;
+    const negative = document.getElementById('adv-negative').value.trim();
+
+    // 風格細節組合(兩個模式共用)
+    const detailsArr = [];
+    if (state.selectedStyle) detailsArr.push(state.selectedStyle);
+    if (customStyle) detailsArr.push(customStyle);
+    if (lighting) detailsArr.push(lighting);
+    if (angle) detailsArr.push(angle);
+    if (colorTone) detailsArr.push(colorTone);
+    if (variantSeed) detailsArr.push(variantSeed);
+    const styleParts = detailsArr.join(', ');
+
+    let prompt;
+    if (state.topMode === 'edit') {
+      // 改圖模式:走任務模板(Change/Preserve/Constraints 結構)
+      const tpl = taskTemplates[state.selectedTask] || taskTemplates.custom;
+      prompt = tpl.build(subject, scene, styleParts);
+      if (negative) prompt += ` Avoid: ${negative}.`;
+    } else {
+      // 文字生圖模式
+      const parts = [];
+      if (scene) parts.push(`Scene: ${scene}.`);
+      parts.push(`Subject: ${subject}.`);
+      if (styleParts) parts.push(`Style & details: ${styleParts}.`);
+      if (negative) parts.push(`Avoid: ${negative}.`);
+      prompt = parts.join(' ');
+    }
+
+    return prompt;
+  }
+
+  function updatePreview() {
+    const p = buildPrompt();
+    const box = document.getElementById('adv-promptPreview');
+    if (!box) return;
+    if (p) {
+      box.textContent = p;
+      box.classList.remove('empty');
+    } else {
+      box.textContent = '填入主體描述後,完整 prompt 會即時顯示在這。';
+      box.classList.add('empty');
+    }
+  }
+  ['adv-subject', 'adv-scene', 'adv-customStyle', 'adv-lighting', 'adv-angle', 'adv-colorTone', 'adv-negative']
+    .forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', updatePreview);
+    });
+
+  const variantSeeds = [
+    'slight angle variation, alternative composition',
+    'different framing, varied perspective',
+    'shifted lighting direction, alternative mood',
+    'subtle color temperature variation',
+    'reframed composition with different focal point',
+    'alternative camera distance, varied depth',
+    'different time of day feeling',
+    'shifted rule of thirds placement',
+    'subtle atmospheric variation',
+    'alternative color grading approach'
+  ];
+
+  async function generate() {
+    // 依當前引擎檢查 Key(共用 Key 優先,否則用個人 Key)
+    const key = getActiveKey(state.engine);
+    const isValid = state.engine === 'openai'
+      ? (key && key.startsWith('sk-'))
+      : (key && key.length > 20);
+    if (!isValid) {
+      alert(`請先設定 ${state.engine === 'openai' ? 'OpenAI' : 'Gemini'} API Key(右上角)`);
+      openKeyModal();
+      return;
+    }
+    // 手動模式強制 topMode = generate(此模式下沒有改圖)
+    state.topMode = 'generate';
+    const basePrompt = buildPrompt();
+    if (!basePrompt) {
+      alert('請填入主體描述');
+      document.getElementById('adv-subject').focus();
+      return;
+    }
+
+    const count = parseInt(document.getElementById('adv-count').value);
+    const quality = document.getElementById('adv-quality').value;
+    const size = document.getElementById('adv-size').value;
+
+    state.images = [];
+    renderLoadingGrid(count);
+
+    const engineLabel = state.engine === 'openai' ? 'gpt-image-2' : 'nano-banana-pro';
+    document.getElementById('resultMeta').textContent =
+      `${engineLabel} · 手動 · ${size} · ${quality} · ${count} 張 · ${state.mode === 'batch' ? '批次模式' : '微變化模式'}`;
+
+    try {
+      if (state.mode === 'batch') {
+        await generateBatch(basePrompt, count, quality, size);
+      } else {
+        await generateVariants(basePrompt, count, quality, size);
+      }
+      document.getElementById('downloadAllBtn').disabled = false;
+      document.getElementById('clearBtn').disabled = false;
+    } catch (e) {
+      console.error(e);
+      alert('生成失敗:' + (e.message || e));
+    }
+  }
+
+  // ═════════════════════════════════════════════════════════
+  //  OpenAI Fetch Helper — 自動判斷走 proxy 或直連
+  // ═════════════════════════════════════════════════════════
+  // 開啟方式:
+  //  - 從 file:// 或 localhost 開 → 直連(方便本機除錯)
+  //  - 從 https://xxxxx 開 → 走 /api/openai-proxy(解決 CORS)
+  const USE_OPENAI_PROXY = (() => {
+    if (typeof window === 'undefined') return false;
+    const p = window.location.protocol;
+    const h = window.location.hostname;
+    if (p === 'file:') return false; // 本機檔案
+    if (h === 'localhost' || h === '127.0.0.1') return false; // 本機開發
+    return true; // 部署到雲端 → 走 proxy
+  })();
+
+  async function openaiFetch(targetPath, { method = 'POST', headers = {}, body, apiKey }) {
+    if (USE_OPENAI_PROXY) {
+      // 走 proxy:呼叫自己網站的 /api/openai-proxy
+      const proxyHeaders = {
+        ...headers,
+        'X-User-OpenAI-Key': apiKey,
+        'X-Target-Path': targetPath,
+      };
+      // 移除原本的 Authorization(改成 X-User-OpenAI-Key)
+      delete proxyHeaders['Authorization'];
+      delete proxyHeaders['authorization'];
+
+      return await fetch('/api/openai-proxy', {
+        method,
+        headers: proxyHeaders,
+        body
+      });
+    }
+
+    // 直連 OpenAI(僅本機 / file:// 有效)
+    return await fetch(`https://api.openai.com${targetPath}`, {
+      method,
+      headers: {
+        ...headers,
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body
+    });
+  }
+
+  // 統一入口,依 engine + topMode 選 endpoint
+  async function callOpenAI(prompt, n, quality, size) {
+    if (state.engine === 'openai' || state.engine === 'openai-sunburst') {
+      return state.topMode === 'edit'
+        ? await callEdits(prompt, n, quality, size)
+        : await callGenerations(prompt, n, quality, size);
+    } else if (state.engine === 'gemini-pro' || state.engine === 'gemini-flash') {
+      const parts = await Promise.all(
+        Array.from({length: n}, () => callGeminiPro(prompt, size))
+      );
+      return { data: parts.map(p => ({ b64_json: p })) };
+    }
+  }
+
+  // 依當前引擎回傳 OpenAI images API 應用的 model 名稱
+  function getOpenAIImageModel() {
+    return state.engine === 'openai-sunburst' ? 'gpt-image-2.5-sunburst' : 'gpt-image-2';
+  }
+
+  // ========== Gemini 3 Pro Image 呼叫 ==========
+  // 把 W×H 換成 Gemini API 需要的 aspect_ratio + image_size
+  // ═════ 批次一鍵 resize ═════
+  document.getElementById('batchResizeSelect').addEventListener('change', async (e) => {
+    const target = e.target.value;
+    e.target.value = '';
+    if (!target) return;
+    await batchResizeAll(target);
+  });
+
+  // AI 重生 resize:送原圖 + 目標尺寸 prompt 給生圖模型,讓 AI 重新構圖
+  async function batchResizeAll(targetSize) {
+    const valid = state.images.filter(im => im && im.url);
+    if (valid.length === 0) {
+      alert('沒有可 resize 的圖片');
+      return;
+    }
+
+    // 引擎預估成本
+    const engineSelect = document.getElementById('execEngine');
+    const currentEngine = engineSelect.value;
+    const costPerImage = {
+      'gemini-flash': 1.2,
+      'gemini-pro': 4.3,
+      'openai': 6,
+      'openai-sunburst': 10
+    }[currentEngine] || 4.3;
+    const engineLabel = {
+      'gemini-flash': 'Nano Banana 2 Flash',
+      'gemini-pro': 'Nano Banana Pro',
+      'openai': 'gpt-image-2',
+      'openai-sunburst': 'GPT Image 2.5 Sunburst'
+    }[currentEngine] || 'AI';
+    const totalCost = Math.round(costPerImage * valid.length);
+
+    const confirmMsg = `🧠 AI 重生 resize 到 ${targetSize}\n\n` +
+      `數量:${valid.length} 張\n` +
+      `引擎:${engineLabel}\n` +
+      `預估成本:約 NT$${totalCost}\n\n` +
+      `AI 會重新構圖以完整保留產品、模特兒、文字等視覺元素,不會亂裁。\n` +
+      `原圖不變,產出額外一份 ZIP。\n\n` +
+      `確定要跑嗎?`;
+    if (!confirm(confirmMsg)) return;
+
+    const [tw, th] = targetSize.split('x').map(Number);
+    const btn = document.getElementById('downloadAllBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ AI 重生 resize 中...';
+
+    // 記憶原本引擎狀態(避免影響其他流程)
+    const originalStateEngine = state.engine;
+    const originalTopMode = state.topMode;
+    state.engine = currentEngine;
+    state.topMode = 'edit'; // 用改圖模式:附上原圖當 reference
+
+    try {
+      const zip = window.JSZip ? new JSZip() : null;
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '').slice(0, 15);
+      const folder = zip ? zip.folder(`ai-resized-${targetSize}-${timestamp}`) : null;
+
+      // 依引擎併發:Flash 4 並行,其他 2 並行(避免爆 rate limit / quota)
+      const concurrency = currentEngine === 'gemini-flash' ? 4 : 2;
+      let done = 0;
+      const total = valid.length;
+      const results = [];
+
+      // 送 API 的近似尺寸
+      const isOpenAI = currentEngine === 'openai' || currentEngine === 'openai-sunburst';
+      const apiSize = mapToApiSize(targetSize, isOpenAI);
+
+      async function processOne(originalIndex, im) {
+        try {
+          const resizePrompt = buildResizePrompt(im, targetSize, tw, th);
+          const genUrl = await callResizeAI(im.url, resizePrompt, apiSize);
+          // 生完後再用 canvas 精修到精確尺寸(通常只是縮到準確 pixel)
+          let finalUrl = genUrl;
+          try {
+            finalUrl = await resizeDataUrl(genUrl, tw, th, 'cover');
+          } catch (e) {
+            console.warn('final resize 失敗,用 AI 原尺寸', e);
+          }
+          const b64 = finalUrl.split(',')[1];
+          const cleanTitle = (im.title || `image-${originalIndex+1}`).replace(/[<>:"/\\|?*\s]/g, '_').slice(0, 40);
+          const filename = `${String(originalIndex+1).padStart(2,'0')}_${cleanTitle}_${targetSize}.png`;
+          if (folder) {
+            folder.file(filename, b64, { base64: true });
+          } else {
+            const a = document.createElement('a');
+            a.href = finalUrl;
+            a.download = filename;
+            a.click();
+            await new Promise(r => setTimeout(r, 100));
+          }
+          return { ok: true, index: originalIndex };
+        } catch (err) {
+          console.error(`resize #${originalIndex+1} 失敗:`, err);
+          return { ok: false, index: originalIndex, error: err.message };
+        } finally {
+          done++;
+          btn.textContent = `⏳ AI 重生 ${done}/${total}...`;
+        }
+      }
+
+      // 併發控制
+      let cursor = 0;
+      async function worker() {
+        while (cursor < state.images.length) {
+          const idx = cursor++;
+          const im = state.images[idx];
+          if (!im || !im.url) continue;
+          results.push(await processOne(idx, im));
+        }
+      }
+      const workers = [];
+      for (let w = 0; w < Math.min(concurrency, state.images.length); w++) {
+        workers.push(worker());
+      }
+      await Promise.all(workers);
+
+      const failed = results.filter(r => !r.ok);
+      if (failed.length > 0) {
+        console.warn(`${failed.length} 張失敗:`, failed);
+      }
+
+      if (zip) {
+        btn.textContent = '⏳ 打包 ZIP 中...';
+        const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ai-resized-${targetSize}-${timestamp}.zip`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      }
+
+      const successCount = results.filter(r => r.ok).length;
+      btn.textContent = failed.length > 0
+        ? `✓ ${successCount}/${total} 已 resize · ${failed.length} 失敗`
+        : `✓ ${successCount} 張已 AI resize 到 ${targetSize}`;
+      setTimeout(() => { btn.textContent = originalText; }, 3500);
+    } catch (e) {
+      console.error(e);
+      alert(`AI Resize 失敗:${e.message}`);
+      btn.textContent = originalText;
+    } finally {
+      state.engine = originalStateEngine;
+      state.topMode = originalTopMode;
+      btn.disabled = false;
+    }
+  }
+
+  // 建構 outpainting / 重生 prompt
+  function buildResizePrompt(im, targetSize, tw, th) {
+    const orientation = tw > th ? 'landscape/horizontal' : (tw < th ? 'portrait/vertical' : 'square');
+    const ratioName = tw === th ? '1:1 square' :
+                      Math.abs(tw/th - 4/5) < 0.05 ? '4:5 portrait (Instagram feed)' :
+                      Math.abs(tw/th - 9/16) < 0.05 ? '9:16 vertical (Story/Reels)' :
+                      Math.abs(tw/th - 16/9) < 0.05 ? '16:9 horizontal banner' :
+                      Math.abs(tw/th - 3/2) < 0.05 ? '3:2 horizontal (LINE ad)' :
+                      `${tw}x${th}`;
+
+    return `Re-compose this exact same design into a ${ratioName} ${orientation} format (${tw}x${th}).
+
+CRITICAL REQUIREMENTS — must strictly preserve:
+- The main product/subject (keep it centered and clearly visible)
+- All text elements (headlines, subheadlines, discount codes, badges) — reproduce them clearly and identically
+- The model/person if any (same face, same pose, same outfit — do not change identity)
+- The overall color palette and mood
+- The typography style
+- The composition philosophy (poster style, lifestyle scene, product-focused, etc.)
+
+Adaptation approach:
+- Extend the background/scene naturally to fit the new aspect ratio, adding matching environment where needed
+- Re-arrange text placement to look native to the new ratio (not just squeezed/stretched)
+- Keep the product/subject fully visible at optimal size — never crop the main subject
+- Maintain the same visual language and quality
+
+The output should feel like it was originally designed for ${ratioName}, not like a cropped or squeezed version.
+
+Reference the attached original image for exact product appearance, text content, and visual style — this is a re-format task, not a redesign.`;
+  }
+
+  // 統一入口:依當前引擎跑 image-to-image resize
+  async function callResizeAI(sourceDataUrl, prompt, apiSize) {
+    const isOpenAI = state.engine === 'openai' || state.engine === 'openai-sunburst';
+
+    if (isOpenAI) {
+      // OpenAI 走 /v1/images/edits(改圖 endpoint 接受 image + prompt)
+      const key = getActiveKey('openai');
+      if (!key || !key.startsWith('sk-')) throw new Error('OpenAI Key 未設定');
+
+      // dataUrl → Blob
+      const b64 = sourceDataUrl.split(',')[1];
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const blob = new Blob([bytes], { type: 'image/png' });
+
+      const fd = new FormData();
+      fd.append('model', getOpenAIImageModel());
+      fd.append('prompt', prompt);
+      fd.append('n', '1');
+      fd.append('size', apiSize);
+      fd.append('quality', 'medium');
+      fd.append('output_format', 'png');
+      fd.append('image[]', blob, 'source.png');
+
+      const res = await openaiFetch('/v1/images/edits', {
+        apiKey: key,
+        body: fd
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      return `data:image/png;base64,${data.data[0].b64_json}`;
+    }
+
+    // Gemini(Pro / Flash)— 用 generateContent 的 image + text 模式
+    const key = getActiveKey('gemini-pro');
+    if (!key) throw new Error('Gemini Key 未設定');
+    const model = state.engine === 'gemini-flash' ? 'gemini-3.1-flash-image' : 'gemini-3-pro-image-preview';
+
+    const b64 = sourceDataUrl.split(',')[1];
+    const mime = sourceDataUrl.match(/data:([^;]+);/)?.[1] || 'image/png';
+    const { aspectRatio, imageSize } = sizeToGeminiConfig(apiSize);
+
+    const body = {
+      contents: [{
+        role: 'user',
+        parts: [
+          { inlineData: { mimeType: mime, data: b64 } },
+          { text: prompt }
+        ]
+      }],
+      generationConfig: {
+        responseModalities: ['IMAGE'],
+        imageConfig: { aspectRatio, imageSize }
+      }
+    };
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': key
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    const cand = data?.candidates?.[0];
+    if (!cand) throw new Error('Gemini 沒有回傳 candidate');
+    const imgPart = cand.content?.parts?.find(p => p.inlineData || p.inline_data);
+    if (!imgPart) throw new Error('Gemini 沒有回傳圖片');
+    const outB64 = imgPart.inlineData?.data || imgPart.inline_data?.data;
+    return `data:image/png;base64,${outB64}`;
+  }
+
+
+  function deriveContextFromSize(size) {
+    const map = {
+      '1080x1080': 'FB/IG 一般貼文,方形構圖,強調中央主體與四角均衡',
+      '1080x1350': 'FB/IG feed 直式廣告(推薦尺寸),強調上下延伸的視覺敘事',
+      '1080x1920': 'IG/FB Story 與 Reels 全螢幕直式沉浸感,上下留安全區給 UI',
+      '1200x628': 'FB 連結貼文與官網 Banner,強調左右延展的橫向構圖',
+      '600x400': 'LINE 小圖廣告,強調短時間清楚溝通、視覺極簡有辨識度'
+    };
+    return map[size] || '通用電商廣告投放';
+  }
+
+  // ═════ 尺寸映射與 Canvas 處理 ═════
+  function mapToApiSize(targetSize, isOpenAI) {
+    const [w, h] = targetSize.split('x').map(Number);
+    const ratio = w / h;
+    if (isOpenAI) {
+      // OpenAI 只支援 1024x1024 / 1024x1536 / 1536x1024
+      if (Math.abs(ratio - 1) < 0.15) return '1024x1024';
+      return ratio > 1 ? '1536x1024' : '1024x1536';
+    }
+    // Gemini 依比例對映到標準尺寸
+    if (Math.abs(ratio - 1) < 0.05) return '1024x1024';
+    if (Math.abs(ratio - 1080/1350) < 0.05) return '1024x1280';
+    if (Math.abs(ratio - 9/16) < 0.05) return '1024x1536';
+    if (Math.abs(ratio - 16/9) < 0.05) return '1536x1024';
+    if (Math.abs(ratio - 3/2) < 0.05) return '1536x1024';
+    return '1024x1024';
+  }
+
+  // canvas resize:mode='cover'(裁切填滿) | 'contain'(留白)
+  async function resizeDataUrl(dataUrl, targetW, targetH, mode = 'cover') {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, targetW, targetH);
+
+        const srcW = img.width, srcH = img.height;
+        const srcRatio = srcW / srcH;
+        const dstRatio = targetW / targetH;
+
+        let sx = 0, sy = 0, sw = srcW, sh = srcH;
+        let dx = 0, dy = 0, dw = targetW, dh = targetH;
+
+        if (mode === 'cover') {
+          if (srcRatio > dstRatio) {
+            sw = srcH * dstRatio;
+            sx = (srcW - sw) / 2;
+          } else {
+            sh = srcW / dstRatio;
+            sy = (srcH - sh) / 2;
+          }
+        } else {
+          if (srcRatio > dstRatio) {
+            dh = targetW / srcRatio;
+            dy = (targetH - dh) / 2;
+          } else {
+            dw = targetH * srcRatio;
+            dx = (targetW - dw) / 2;
+          }
+        }
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => reject(new Error('圖片載入失敗'));
+      img.src = dataUrl;
+    });
+  }
+
+  function sizeToGeminiConfig(size) {
+    const [w, h] = size.split('x').map(Number);
+    // aspect_ratio
+    let ar = '1:1';
+    if (w > h) ar = w / h >= 1.7 ? '16:9' : '4:3';
+    else if (h > w) ar = h / w >= 1.7 ? '9:16' : '3:4';
+    // image_size 檔位(Gemini 支援 1K / 2K / 4K)
+    let imageSize = '1K';
+    const maxDim = Math.max(w, h);
+    if (maxDim >= 3000) imageSize = '4K';
+    else if (maxDim >= 1500) imageSize = '2K';
+    return { aspectRatio: ar, imageSize };
+  }
+
+  // File → base64(去掉 data URL prefix)
+  function fileToBase64(file) {
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => {
+        const s = r.result;
+        const idx = s.indexOf(',');
+        res(idx >= 0 ? s.slice(idx + 1) : s);
+      };
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+  }
+
+  async function callGeminiPro(prompt, size, modelOverride) {
+    const key = getActiveKey('gemini-pro');
+    if (!key) throw new Error('請先設定 Gemini API Key');
+    const { aspectRatio, imageSize } = sizeToGeminiConfig(size);
+
+    // 組 parts: 改圖模式先塞參考圖,再塞 prompt
+    const parts = [];
+    if (state.topMode === 'edit') {
+      for (const f of state.uploadedFiles) {
+        const b64 = await fileToBase64(f.file);
+        parts.push({
+          inlineData: {
+            mimeType: f.file.type || 'image/png',
+            data: b64
+          }
+        });
+      }
+    }
+    parts.push({ text: prompt });
+
+    const body = {
+      contents: [{ role: 'user', parts }],
+      generationConfig: {
+        responseModalities: ['IMAGE'],
+        imageConfig: {
+          aspectRatio,
+          imageSize
+        }
+      }
+    };
+
+    // 依 state.engine 選 model:'gemini-flash' → Nano Banana 2 Flash;其他 → Pro
+    const model = modelOverride || (state.engine === 'gemini-flash' ? 'gemini-3.1-flash-image' : 'gemini-3-pro-image-preview');
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': key
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    // 從 candidates[0].content.parts[] 找出 inlineData
+    const cand = data?.candidates?.[0];
+    if (!cand) throw new Error('Gemini 沒有回傳 candidate(可能被安全過濾)');
+    const imgPart = cand.content?.parts?.find(p => p.inlineData || p.inline_data);
+    if (!imgPart) {
+      const textPart = cand.content?.parts?.find(p => p.text);
+      throw new Error(textPart?.text || '回傳無圖片內容');
+    }
+    return imgPart.inlineData?.data || imgPart.inline_data?.data;
+  }
+
+  // ========== OpenAI 呼叫(保留原本兩支)==========
+  async function callGenerations(prompt, n, quality, size) {
+    const key = getActiveKey('openai');
+    const res = await openaiFetch('/v1/images/generations', {
+      headers: { 'Content-Type': 'application/json' },
+      apiKey: key,
+      body: JSON.stringify({
+        model: getOpenAIImageModel(),
+        prompt,
+        n,
+        size,
+        quality,
+        output_format: 'png'
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+    return await res.json();
+  }
+
+  async function callEdits(prompt, n, quality, size) {
+    const fd = new FormData();
+    fd.append('model', getOpenAIImageModel());
+    fd.append('prompt', prompt);
+    fd.append('n', String(n));
+    fd.append('size', size);
+    fd.append('quality', quality);
+    fd.append('output_format', 'png');
+    for (const f of state.uploadedFiles) {
+      fd.append('image[]', f.file, f.name);
+    }
+    const key = getActiveKey('openai');
+    const res = await openaiFetch('/v1/images/edits', {
+      apiKey: key,
+      body: fd
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+    return await res.json();
+  }
+
+  async function generateBatch(prompt, count, quality, size) {
+    const data = await callOpenAI(prompt, count, quality, size);
+    data.data.forEach((item, i) => {
+      const url = `data:image/png;base64,${item.b64_json}`;
+      state.images[i] = { url, prompt, index: i };
+      renderCard(i, url, prompt);
+    });
+  }
+
+  async function generateVariants(basePrompt, count, quality, size) {
+    const tasks = [];
+    for (let i = 0; i < count; i++) {
+      const seed = variantSeeds[i % variantSeeds.length];
+      const variantPrompt = `${basePrompt} Variation hint: ${seed}.`;
+      tasks.push(
+        callOpenAI(variantPrompt, 1, quality, size)
+          .then(data => {
+            const url = `data:image/png;base64,${data.data[0].b64_json}`;
+            state.images[i] = { url, prompt: variantPrompt, index: i };
+            renderCard(i, url, variantPrompt);
+          })
+          .catch(err => {
+            renderError(i, err.message);
+          })
+      );
+    }
+    await Promise.allSettled(tasks);
+  }
+
+  function renderLoadingGrid(count) {
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const card = document.createElement('div');
+      card.className = 'card loading';
+      card.id = `card-${i}`;
+      card.innerHTML = `
+        <div class="spinner"></div>
+        <div class="label">#${String(i + 1).padStart(2, '0')} / 生成中</div>
+      `;
+      grid.appendChild(card);
+    }
+  }
+
+  function renderCard(i, url, prompt) {
+    const card = document.getElementById(`card-${i}`);
+    if (!card) return;
+    card.className = 'card';
+    card.innerHTML = `
+      <span class="badge">#${String(i + 1).padStart(2, '0')}</span>
+      <img src="${url}" alt="generated ${i + 1}" />
+      <div class="overlay">
+        <div class="overlay-row">
+          <button onclick="downloadOne(${i})">↓ 下載</button>
+          <button onclick="copyPrompt(${i}, event)">⌘ 複製 prompt</button>
+          <button onclick="viewLarge(${i})">⌕ 放大</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderError(i, msg) {
+    const card = document.getElementById(`card-${i}`);
+    if (!card) return;
+    card.className = 'card error';
+    card.innerHTML = `<div class="label">#${String(i + 1).padStart(2, '0')}<br/>${msg}</div>`;
+  }
+
+  function downloadOne(i) {
+    const img = state.images[i];
+    if (!img) return;
+    const a = document.createElement('a');
+    a.href = img.url;
+    a.download = `gpt-image-2-${Date.now()}-${i + 1}.png`;
+    a.click();
+  }
+
+  async function downloadAll() {
+    const valid = state.images.filter(im => im && im.url);
+    if (valid.length === 0) {
+      alert('沒有可下載的圖片');
+      return;
+    }
+
+    const btn = document.getElementById('downloadAllBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ 打包中...';
+
+    try {
+      // JSZip 沒載入 → 退回逐張下載
+      if (!window.JSZip) {
+        console.warn('JSZip not loaded, fallback to individual downloads');
+        for (let i = 0; i < state.images.length; i++) {
+          if (state.images[i] && state.images[i].url) {
+            downloadOne(i);
+            await new Promise(r => setTimeout(r, 200));
+          }
+        }
+        return;
+      }
+
+      const zip = new JSZip();
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '').slice(0, 15);
+      const folder = zip.folder(`butterball-${timestamp}`);
+
+      // 把每張圖 base64 塞進 zip
+      for (let i = 0; i < state.images.length; i++) {
+        const im = state.images[i];
+        if (!im || !im.url) continue;
+        // data:image/png;base64,xxxx → 抓 base64 部分
+        const b64 = im.url.split(',')[1];
+        const cleanTitle = (im.title || `image-${i+1}`).replace(/[<>:"/\\|?*\s]/g, '_').slice(0, 40);
+        const filename = `${String(i+1).padStart(2,'0')}_${cleanTitle}.png`;
+        folder.file(filename, b64, { base64: true });
+      }
+
+      // 加一份 prompt 對照表
+      const promptsIndex = state.images
+        .map((im, i) => im && im.url ? `#${String(i+1).padStart(2,'0')} ${im.title || '未命名'}\n${'-'.repeat(50)}\n${im.prompt || ''}\n\n` : null)
+        .filter(Boolean)
+        .join('\n');
+      folder.file('_prompts.txt', promptsIndex);
+
+      btn.textContent = '⏳ 壓縮中...';
+      const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+
+      // 觸發下載
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `butterball-${timestamp}.zip`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+      btn.textContent = `✓ 已下載 ${valid.length} 張`;
+      setTimeout(() => { btn.textContent = originalText; }, 2500);
+    } catch (e) {
+      console.error('ZIP 打包失敗:', e);
+      alert(`打包失敗:${e.message}\n將改為逐張下載`);
+      // fallback
+      for (let i = 0; i < state.images.length; i++) {
+        if (state.images[i] && state.images[i].url) {
+          downloadOne(i);
+          await new Promise(r => setTimeout(r, 200));
+        }
+      }
+      btn.textContent = originalText;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function copyPrompt(i, ev) {
+    const img = state.images[i];
+    if (!img) return;
+    navigator.clipboard.writeText(img.prompt);
+    const btn = ev.target;
+    const orig = btn.textContent;
+    btn.textContent = '✓ 已複製';
+    setTimeout(() => btn.textContent = orig, 1200);
+  }
+
+  function viewLarge(i) {
+    const img = state.images[i];
+    if (!img) return;
+    const w = window.open();
+    w.document.write(`
+      <html><head><title>Image #${i + 1}</title></head>
+      <body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;">
+        <img src="${img.url}" style="max-width:100%;max-height:100vh;" />
+      </body></html>
+    `);
+  }
+
+  function clearResults() {
+    state.images = [];
+    document.getElementById('grid').innerHTML = `
+      <div class="empty-state">
+        <h3>Ready when you are.</h3>
+        <p>填入主體描述、選擇風格、調整參數,然後按「生成圖片」。</p>
+      </div>
+    `;
+    document.getElementById('downloadAllBtn').disabled = true;
+    document.getElementById('clearBtn').disabled = true;
+    document.getElementById('resultMeta').textContent = '尚未生成';
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  ✨ 新流程:AI 策劃 → 勾選 → 平行生圖
+  // ═══════════════════════════════════════════════════════════
+
+  // 新流程狀態
+  state.selectedTone = '輕奢療癒 · 精緻儀式感 · 高質感取向';
+  state.plans = [];
+  state.planning = false;
+  state.generating = false;
+
+  // 人像
+  state.personaEnabled = false;
+  state.personaMode = 'basic'; // 'basic' | 'advanced'
+  state.personaBasic = {
+    gender: 'female',
+    age: '',
+    ethnicity: '',
+    body: '',
+    face: '',
+    skin: '',
+    hair: '',
+    vibe: '',
+    outfit: ''
+  };
+
+  // 文案
+  state.copyEnabled = false;
+  state.selectedFont = 'AI decides';
+  state.copyHighlights = null; // 策劃時 AI 擷取出來的重點
+  state.promoImages = []; // 上傳的優惠截圖 [{dataUrl, name, extracted}]
+
+  // 策劃 LLM
+  state.plannerLLM = 'gemini'; // 'gemini' | 'openai'
+
+  // 品牌調性 chip 綁定
+  document.querySelectorAll('#toneChips .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#toneChips .chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      state.selectedTone = chip.dataset.tone;
+    });
+  });
+
+  // 策劃張數 slider
+  document.getElementById('planCount').addEventListener('input', e => {
+    document.getElementById('planCountDisplay').textContent = e.target.value;
+  });
+
+  // ═════ 人像模組綁定 ═════
+  function togglePersona() {
+    state.personaEnabled = document.getElementById('personaToggle').checked;
+    document.getElementById('personaModule').classList.toggle('active', state.personaEnabled);
+    // 開啟時,自動把 personaCount 上限對齊 planCount
+    if (state.personaEnabled) syncPersonaCountMax();
+  }
+
+  function syncPersonaCountMax() {
+    const planCount = parseInt(document.getElementById('planCount').value);
+    const personaSlider = document.getElementById('personaCount');
+    personaSlider.max = planCount;
+    if (parseInt(personaSlider.value) > planCount) {
+      personaSlider.value = planCount;
+      document.getElementById('personaCountDisplay').textContent = planCount;
+    }
+  }
+
+  // personaCount slider
+  document.getElementById('personaCount').addEventListener('input', e => {
+    document.getElementById('personaCountDisplay').textContent = e.target.value;
+  });
+
+  // planCount 變動時同步 personaCount 上限
+  document.getElementById('planCount').addEventListener('input', () => {
+    if (state.personaEnabled) syncPersonaCountMax();
+  });
+
+  function setPersonaMode(m) {
+    state.personaMode = m;
+    document.getElementById('personaModeBasic').classList.toggle('active', m === 'basic');
+    document.getElementById('personaModeAdvanced').classList.toggle('active', m === 'advanced');
+    document.getElementById('personaBasic').style.display = m === 'basic' ? 'block' : 'none';
+    document.getElementById('personaAdvanced').style.display = m === 'advanced' ? 'block' : 'none';
+  }
+
+  // 每個 persona-chips 群組 — 單選(每組互斥)
+  document.querySelectorAll('.persona-chips').forEach(group => {
+    const key = group.dataset.group;
+    group.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const currentlyActive = chip.classList.contains('active');
+        group.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        if (!currentlyActive) {
+          chip.classList.add('active');
+          state.personaBasic[key] = chip.dataset.val;
+        } else {
+          state.personaBasic[key] = ''; // 再點一次取消
+        }
+      });
+    });
+  });
+
+  // 組合基本人像描述(從當前 chip 狀態)
+  function buildPersonaBasicDesc() {
+    const p = state.personaBasic;
+    const parts = [];
+    const genderMap = { female: 'a woman', male: 'a man', androgynous: 'an androgynous person', '__AI__': '[AI_DECIDE_GENDER: based on target audience of the product]' };
+    parts.push(genderMap[p.gender] || 'a woman');
+
+    // 每個欄位如果是 __AI__ 就轉為指令
+    const aiDirective = (field, val) => val === '__AI__' ? `[AI_DECIDE_${field.toUpperCase()}: choose fitting ${field} based on product]` : val;
+
+    if (p.age) parts.push(aiDirective('age', p.age));
+    if (p.ethnicity) parts.push(aiDirective('ethnicity', p.ethnicity));
+    if (p.body) parts.push(aiDirective('body', p.body));
+    if (p.face) parts.push(aiDirective('face', p.face));
+    if (p.skin) parts.push(aiDirective('skin', p.skin));
+    if (p.hair) parts.push(aiDirective('hair', p.hair));
+    if (p.vibe) parts.push(aiDirective('vibe', p.vibe));
+    if (p.outfit) parts.push(p.outfit === '__AI__' ? '[AI_DECIDE_OUTFIT: choose scene-appropriate outfit]' : 'wearing ' + p.outfit);
+    return parts.join(', ');
+  }
+
+  // ═════ 文案模組綁定 ═════
+  function toggleCopy() {
+    state.copyEnabled = document.getElementById('copyToggle').checked;
+    document.getElementById('copyModule').classList.toggle('active', state.copyEnabled);
+  }
+
+  // ═════ 優惠資訊截圖上傳與分析 ═════
+  document.getElementById('promoImgInput').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    e.target.value = '';
+
+    const status = document.getElementById('promoImgStatus');
+    status.className = 'pdf-status loading';
+    status.textContent = `📷 讀取 ${files.length} 張優惠截圖...`;
+
+    // 檢查目前有幾張已上傳 + 這批,總數不能超過 5
+    const remaining = 5 - state.promoImages.length;
+    if (remaining <= 0) {
+      status.className = 'pdf-status error';
+      status.textContent = '⚠️ 最多 5 張優惠截圖';
+      return;
+    }
+    const toAdd = files.slice(0, remaining);
+
+    try {
+      // 讀取每張成 dataUrl,存到 state
+      const newItems = [];
+      for (const f of toAdd) {
+        if (!f.type.startsWith('image/')) continue;
+        const dataUrl = await new Promise((res, rej) => {
+          const r = new FileReader();
+          r.onload = () => res(r.result);
+          r.onerror = rej;
+          r.readAsDataURL(f);
+        });
+        newItems.push({ dataUrl, name: f.name, extracted: null });
+      }
+      state.promoImages.push(...newItems);
+      renderPromoPreview();
+
+      // 呼叫 AI 分析新加的
+      status.textContent = `🧠 AI 分析 ${newItems.length} 張優惠截圖...`;
+      const summary = await analyzePromoImages(newItems);
+
+      // 把分析結果串到 copyText
+      const cur = document.getElementById('copyText').value.trim();
+      const marker = cur ? '\n\n--- 從優惠截圖擷取 ---\n\n' : '';
+      document.getElementById('copyText').value = cur + marker + summary;
+
+      status.className = 'pdf-status success';
+      const preview = summary.length > 80 ? summary.slice(0, 80) + '...' : summary;
+      status.textContent = `✓ 已分析 · ${preview}`;
+    } catch (err) {
+      console.error(err);
+      status.className = 'pdf-status error';
+      status.textContent = `⚠️ 分析失敗:${(err.message || err).toString().slice(0, 150)}`;
+    }
+  });
+
+  function renderPromoPreview() {
+    const box = document.getElementById('promoImgPreview');
+    box.innerHTML = state.promoImages.map((im, i) => `
+      <div class="thumb" title="${escapeHtml(im.name)}">
+        <img src="${im.dataUrl}" alt="">
+        <button class="rm" onclick="removePromoImg(${i})" title="移除">×</button>
+      </div>
+    `).join('');
+  }
+
+  function removePromoImg(i) {
+    state.promoImages.splice(i, 1);
+    renderPromoPreview();
+  }
+
+  // 用 vision LLM 分析優惠截圖,同時抓「文字」跟「贈品視覺元素」
+  async function analyzePromoImages(imageList) {
+    const systemPrompt = `你是電商促銷資訊擷取專家,任務是從優惠活動截圖(可能是官網 banner、DM、贈品照、品牌 IG 貼文、shop 首頁截圖)中,擷取**兩個維度**的資訊:
+
+## 維度 1:優惠文字內容(用於視覺上要「寫」出來的字)
+- 折扣資訊(全館 8 折、買一送一、滿千折百 等)
+- 優惠碼(SAVE20 之類)
+- 檔期(限時 48HR、9/20-9/30、雙 11 等)
+- 贈品名稱(送 XX、加購價 XX)
+- 品牌名 / slogan
+
+## 維度 2:視覺元素(用於生圖時「畫」出來)
+- 贈品長什麼樣(顏色、包裝形狀、產品類型 — 例:「玫瑰粉小方盒精華液」)
+- 主視覺配色(粉色系、金色高質感、紅金節慶感 等)
+- 排版風格(海報型置中大字、雜貨風手繪、極簡留白 等)
+
+## 輸出格式(純繁體中文段落,不用 markdown)
+【文字重點】
+- 主標:xxx
+- 副標:xxx
+- 優惠碼:xxx(如有)
+- 檔期:xxx(如有)
+- 贈品:xxx(如有)
+
+【贈品視覺】
+- 描述贈品外觀,包含顏色、材質、包裝(如果截圖裡有贈品照)
+- 若截圖沒顯示贈品實體,寫「無贈品實體照」
+
+【視覺風格參考】
+- 主視覺配色跟排版風格描述(給生圖 AI 參考)
+
+## 禁忌
+- 只擷取實際看到的內容,不憑空補齊
+- 不要有前言或結語,直接開始寫`;
+
+    const useOpenAI = state.plannerLLM === 'openai';
+    const key = getActiveKey(useOpenAI ? 'openai' : 'gemini-pro');
+    if (!key || key.length < 20) {
+      throw new Error(`需要先設定 ${useOpenAI ? 'OpenAI' : 'Gemini'} API Key`);
+    }
+
+    if (useOpenAI) {
+      const userContent = imageList.map(im => ({
+        type: 'image_url',
+        image_url: { url: im.dataUrl }
+      }));
+      userContent.push({ type: 'text', text: '請分析這些優惠截圖。' });
+
+      const res = await openaiFetch('/v1/chat/completions', {
+        headers: { 'Content-Type': 'application/json' },
+        apiKey: key,
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userContent }
+          ],
+          temperature: 0.2,
+          max_tokens: 1200
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      return data?.choices?.[0]?.message?.content?.trim() || '';
+    } else {
+      const parts = [];
+      for (const im of imageList) {
+        const b64 = im.dataUrl.split(',')[1];
+        const mime = im.dataUrl.match(/data:([^;]+);/)?.[1] || 'image/jpeg';
+        parts.push({ inlineData: { mimeType: mime, data: b64 } });
+      }
+      parts.push({ text: '請分析這些優惠截圖。' });
+
+      const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent';
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ role: 'user', parts }],
+          generationConfig: { temperature: 0.2 }
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    }
+  }
+
+  // 字體風格 chip(單選)
+  document.querySelectorAll('#fontChips .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#fontChips .chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      state.selectedFont = chip.dataset.font;
+    });
+  });
+
+  // 策劃 LLM 切換
+  document.getElementById('plannerLLM').addEventListener('change', e => {
+    state.plannerLLM = e.target.value;
+  });
+
+  // 進階摺疊
+  function toggleAdvanced() {
+    const t = document.getElementById('advancedToggle');
+    const p = document.getElementById('advancedPanel');
+    t.classList.toggle('open');
+    p.classList.toggle('open');
+  }
+
+  // ===== Gemini 2.5 Flash 呼叫(給 AI 策劃師用)=====
+  async function callGeminiChat(systemPrompt, userText, images = []) {
+    const key = getActiveKey('gemini-pro'); // 共用 Gemini Key
+    if (!key) throw new Error('Gemini Key 未設定,AI 策劃需要 Gemini 2.5 Flash');
+
+    const parts = [];
+    for (const f of images) {
+      const b64 = await fileToBase64(f.file);
+      parts.push({
+        inlineData: { mimeType: f.file.type || 'image/png', data: b64 }
+      });
+    }
+    parts.push({ text: userText });
+
+    const body = {
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: [{ role: 'user', parts }],
+      generationConfig: {
+        temperature: 0.85,
+        responseMimeType: 'application/json'
+      }
+    };
+
+    const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent';
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': key
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error('AI 未回傳內容');
+    return text;
+  }
+
+  // ===== GPT-4o-mini 呼叫(策劃師備選)=====
+  async function callOpenAIChat(systemPrompt, userText, images = []) {
+    const key = getActiveKey('openai');
+    if (!key || !key.startsWith('sk-')) {
+      throw new Error('OpenAI Key 未設定或格式錯誤');
+    }
+
+    const userContent = [];
+    for (const f of images) {
+      const b64 = await fileToBase64(f.file);
+      const mime = f.file.type || 'image/png';
+      userContent.push({
+        type: 'image_url',
+        image_url: { url: `data:${mime};base64,${b64}` }
+      });
+    }
+    userContent.push({ type: 'text', text: userText });
+
+    const body = {
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userContent }
+      ],
+      temperature: 0.85,
+      response_format: { type: 'json_object' }
+    };
+
+    const res = await openaiFetch('/v1/chat/completions', {
+      headers: { 'Content-Type': 'application/json' },
+      apiKey: key,
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    const text = data?.choices?.[0]?.message?.content;
+    if (!text) throw new Error('AI 未回傳內容');
+    return text;
+  }
+
+  // ===== 策劃師統一入口 =====
+  async function callPlanner(systemPrompt, userText, images = []) {
+    if (state.plannerLLM === 'openai') {
+      return await callOpenAIChat(systemPrompt, userText, images);
+    }
+    return await callGeminiChat(systemPrompt, userText, images);
+  }
+
+  // ===== AI 策劃師的 System Prompt =====
+  function buildPlannerSystemPrompt(opts) {
+    const { platformDesc, tone, count, personaDesc, copyText, fontStyle, hasPromoImages } = opts;
+
+    // 人像段
+    let personaSection = '';
+    if (personaDesc) {
+      const modelCount = opts.personaCount || Math.ceil(count * 0.7);
+      const nonModelCount = count - modelCount;
+      personaSection = `
+
+## 模特兒指示(精確張數控制)
+本次規劃**必須有精確 ${modelCount} 張含模特兒、${nonModelCount} 張純產品/氛圍照**。模特兒描述:
+> ${personaDesc}
+
+**重要規則:**
+- 前 ${modelCount} 個 element 必須是**含模特兒**的素材(prompt 內描述模特兒使用/展示產品的場景)
+- 後 ${nonModelCount} 個 element 必須是**純產品/氛圍照**(質地特寫、產品排列、留白構圖等,不出現任何人物或身體部位)
+- 每張含模特兒的 prompt 都要以「the same specific model described above」開頭,並帶入完整模特兒描述,以維持模特兒外型一致性
+- 模特兒姿態要跟該場景的溝通目的匹配
+- **所有人物一律描繪成年成人(25-45 歲之間),明確標註 "adult person over 25 years old"**,絕對不描繪未成年或學生
+- 避免直接說出「Asian model」這種模糊詞彙,用具體外型細節描繪`;
+    }
+
+    // 文案段
+    let copySection = '';
+    if (copyText) {
+      copySection = `
+
+## 文字 / 標語整合(關鍵任務 — 必須嚴格遵守)
+使用者提供了以下「品牌/促銷重點」內容(可能是促銷資訊、也可能是品牌強調的成分/賣點/認證,或兩者混合):
+> ${copyText}
+
+## 你必須先做「文案內容判斷」
+分析上面的文字屬於哪一類(可複選):
+- **PROMOTIONAL**(促銷型):有折扣、限時、優惠碼、活動檔期(例:88 折、SAVE20、買一送一、限時 48HR)
+- **BRAND_EMPHASIS**(品牌強調型):強調成分、認證、產地、功效、材質(例:100% 蠶絲蛋白、SGS 認證、日本製、敏感肌可用)
+- **MIXED**(兩者都有)
+
+## 你必須擷取三個層次的文字(嚴格 3-8 字/短句、繁體中文)
+
+## 🚨 極重要:嚴禁腦補、擴寫、發明使用者沒寫的內容
+使用者只寫了什麼、你就抓什麼。以下**絕對禁止**:
+- ❌ 憑空發明折扣碼(例:使用者寫「兩盒免運」你就編「FREE2」)
+- ❌ 憑空發明檔期(使用者沒寫日期,不要編「限時 48HR」)
+- ❌ 擴寫成「輸入折扣碼享 XX」如果使用者根本沒提優惠碼
+- ❌ 把「兩盒免運」擴寫成「兩盒即享免運 · 多盒團購再享專屬折扣」這種延伸
+- ❌ 為了讓 CTA 欄位有東西就編一個
+
+**正確做法**:
+- 如果使用者沒寫優惠碼 → cta_code **一定留空字串 ""**
+- 如果使用者沒寫優惠碼 → cta_context **一定留空字串 ""**
+- 如果使用者沒寫檔期日期 → subheadline 不要編日期
+- headline / subheadline **必須是使用者原文的縮短或原句**,不能改寫、不能加料
+
+## 判斷欄位有沒有東西
+只看使用者原文有沒有出現以下字樣:
+- 折扣碼有:含英文/數字碼且明說「輸入」「代碼」「折扣碼」(例:SAVE20、AUTUMN85)
+- 檔期有:含具體日期或時段(例:9/20-9/30、限時 48HR、僅限 3 天)
+- 沒有以上 → 對應欄位一律留空,不要編
+
+根據判斷類型,擷取對應內容:
+
+### 若為 PROMOTIONAL(或 MIXED 的促銷部分)
+- **headline(主標,3-8 字)**:最大最醒目的優惠核心。例:「88 折」「買一送一」「限時 48HR」
+- **subheadline(副標,5-15 字)**:輔助訊息。例:「錯過等明年」「本週最後」
+- **cta_code(CTA/折扣碼)**:折扣碼、行動指示。例:「SAVE20」;沒有留空字串
+- **cta_context(CTA 說明文字)**:例:「輸入折扣碼享 88 折」、「結帳輸入享優惠」— 折扣碼旁邊必附說明文字,不能單獨出現
+
+### 若為 BRAND_EMPHASIS(或 MIXED 的品牌部分)
+- **headline(主標,3-8 字)**:最強的差異化訴求。例:「100% 蠶絲」「敏感肌可用」「日本製造」
+- **subheadline(副標,5-15 字)**:功效/認證支撐。例:「分子小 20 倍」「SGS 認證通過」
+- **cta_code**:可留空字串,或抓一個象徵字樣(如「$1,880」定價、「NEW」新品標)
+- **cta_context**:如果 cta_code 有,補說明。例:「特惠價 $1,880」
+
+### 若為 MIXED
+- 選對這次投放**最有戰鬥力**的一組作為主標(通常促銷比品牌重點更能推動點擊)
+- 另一個層次用來當 subheadline
+
+## ⚠️ 極重要:每張素材 prompt 的文字整合規則(絕對遵守)
+
+### 規則 1:文字必須「大而明顯」,不能只在角落
+每張 prompt 的文字整合段必須採用以下三種構圖之一,由你視情境選擇:
+
+**構圖 A:海報式(適用純產品照、有大量留白的構圖)**
+> "Text layout — POSTER STYLE: Very large bold headline text reading '[headline]' occupying prominent top-third area of the image, sized dramatically (35-50% of image width). Below headline, medium-sized subheadline reading '[subheadline]'. In the bottom area, a clearly visible pill-shaped badge with the discount code '[cta_code]' next to explanatory text '[cta_context]' (e.g., 'input code for discount')."
+
+**構圖 B:標籤式(適用情境照、模特兒使用場景)**
+> "Text layout — LABEL STYLE: A prominent horizontal banner across the top or bottom quarter of the image containing the headline '[headline]' in large bold letters. A smaller badge or tag showing '[cta_code]' with the accompanying line '[cta_context]' positioned distinctly separate from the badge so both are legible. Subheadline '[subheadline]' appears as a supporting line beneath the headline."
+
+**構圖 C:雜誌封面式(適用高級品牌、精品調性)**
+> "Text layout — MAGAZINE COVER STYLE: The headline '[headline]' rendered in elegant large typography as a magazine masthead across the top or side. Subheadline '[subheadline]' set as a smaller secondary line. Discount code '[cta_code]' presented as a small elegant seal with the explanatory line '[cta_context]' clearly visible beside it."
+
+### 規則 2:CTA / 折扣碼絕對不能孤立
+如果有 cta_code(折扣碼):**cta_code 旁邊必須緊鄰 cta_context 說明文字**。禁止只出現「SAVE20」三個字讓觀眾不知道是什麼。
+
+### 規則 3:主標字大小佔比
+主標(headline)在圖中的高度必須占畫面高度的 **12-20%**(不是 3%),不能只是角落小字。
+
+### 規則 4:文字重複明確指定
+在 prompt 內用 **雙引號** 包住要顯示的中文字串,例如:
+> the large headline text "全館 8 折" positioned at top center
+
+## 字體風格
+${fontStyle === 'AI decides' ? '你自己判斷:PROMOTIONAL 通常用粗黑衝擊或圓潤可愛(強烈吸睛)、BRAND_EMPHASIS 通常用高級襯線或現代無襯線(質感為主),在 prompt 中明確描述' : `統一使用這個字體風格描述:「${fontStyle}」`}
+
+## 中文字渲染的極重要注意事項
+每張 prompt 都必須明確寫:
+> "Render Traditional Chinese characters exactly as specified in quotation marks, with no substitution, no random glyphs, accurate stroke shapes. Do not invent or add any brand names, product names, or text besides the specified strings."
+
+## 擷取結果放在 JSON 哪裡
+只在陣列/物件的**第一個 element**加上 "copy_highlights" 欄位,結構:
+{ "headline": "...", "subheadline": "...", "cta_code": "...", "cta_context": "...", "content_type": "PROMOTIONAL|BRAND_EMPHASIS|MIXED" }
+其他 element 不重複此欄位。`;
+    }
+
+    return `你是資深電商廣告視覺策略顧問,專精於台灣/華人市場的社群廣告素材規劃。你的任務是根據產品資訊,為單一產品規劃一整套**多元、互補、涵蓋完整廣告漏斗**的視覺素材方向。
+
+## ⚠️ 重要:遇到 [AI_DECIDE_XXX] 標記時的處理
+如果你在 tone、模特兒描述、字體風格等地方看到 \`[AI_DECIDE_XXX: ...]\` 的標記,那是使用者授權你**依產品內容自行判斷最合適選項**的訊號。此時你要:
+1. 先分析產品的定位、目標客群、價位、賣點
+2. 為該欄位挑一個具體、明確的實際描述(不能保留標記文字!)
+3. 挑好之後**所有素材都使用同一個決定**(維持一致性,不要每張變一個)
+4. 在第一個 element 的 reason 開頭簡短說明你為此產品挑了什麼(例如「AI 判斷此產品適合韓系精緻風」)
+5. 產出的 prompt 內只出現具體英文描述,不要出現 \`[AI_DECIDE\` 這種字串
+
+
+## 你的思考框架
+1. **產品分析**:先讀懂產品定位(價格帶、目標客群、關鍵賣點、競品差異)
+2. **策略推理**:針對這個產品的**特殊性**設計專屬素材,而非套用罐頭場景
+3. **多元覆蓋**:所選素材要涵蓋不同用途(認知/興趣/轉換)、不同構圖類型(產品照/情境照/氛圍照)、不同視覺情緒
+4. **平台適配**:考量指定投放平台的特性
+5. **品牌調性**:所有素材維持一致的視覺語言
+
+## 好的素材規劃原則
+- 每一張都有明確**廣告溝通目的**(展示質地?建立情緒共鳴?展現使用情境?)
+- 避免同質性 — 10 張不能都是產品居中特寫
+- 融入產品的**核心賣點視覺化**
+- 適合台灣/華人審美的構圖與色調
+- **每張獨立可用**,不需要組合才成立${personaSection}${copySection}${hasPromoImages ? `
+
+## 🎁 優惠活動視覺參考(重要)
+使用者上傳了優惠活動截圖(可能是官網 banner、DM、贈品照)。你**看到的圖片中含有**:
+- 贈品實體外觀(顏色、包裝、形狀、材質)
+- 主視覺配色與排版風格
+- 官方使用的文案
+
+## 你必須做的事
+1. **贈品還原**:如果截圖有贈品實體照,在**至少 1-2 張**素材的 prompt 中,明確描寫贈品的外觀,讓生圖 AI 把贈品畫在畫面中(例:「and a small pink gift box tied with white ribbon placed next to the main product」)
+2. **配色參考**:如果截圖顯示品牌主視覺配色(例如粉金、紅金、莓果紫),讓所有素材傾向這個色調
+3. **排版風格參考**:如果截圖是海報型設計,就採用海報排版;如果是產品情境圖,就採用情境風
+4. **文字精準抓取**:優先採用截圖中出現的官方文案原文(可能比使用者手打的更精準)` : ''}
+
+## 產品資訊
+投放平台:${platformDesc}
+品牌調性:${tone}
+策劃張數:${count} 張
+
+## 輸出格式(嚴格 JSON)
+${state.plannerLLM === 'openai' || copyText ? `回傳一個 JSON 物件,結構為 { "plans": [...] },裡面的 plans 陣列長度必須是 ${count}。` : `回傳純 JSON 陣列,長度必須是 ${count}。`}
+每個 element 是:
+{
+  "title": "8-14 字的中文素材名稱,直接說出這張要拍什麼",
+  "reason": "20-40 字說明:為何這張素材對這個產品重要、要打中什麼心理",
+  "prompt": "英文 image generation prompt。**開頭必須是具體的視覺描述**(場景/構圖/主體),接著是產品的呈現方式,最後是風格細節(光線/色調/氛圍/品質、以及文字整合指示如有)。200-400 字,結構化但流暢。**必須明確保留產品的視覺識別**(shape, color, label, logo unchanged from reference)。"
+}
+
+## 重要禁忌
+- 不要輸出 JSON 之外的任何文字(不要有 markdown code block、不要有前言、不要有結語)
+- 不要重複場景(每張必須明顯不同)
+- prompt 不要出現「high quality」「4k」「masterpiece」這類無意義形容詞,而是用具體視覺語言
+- ${copyText ? '文字整合到圖片時,英文 prompt 用具體英文字串包住中文字(例如 the text "全館 8 折")避免生圖模型渲染錯亂' : '不要寫出「產品名稱」的英文字母到 prompt 裡(避免生圖 model 亂寫文字)'}`;
+  }
+
+  // ===== 執行策劃 =====
+  async function runPlanning() {
+    const productDesc = document.getElementById('productDesc').value.trim();
+    if (!productDesc) {
+      alert('請填入產品介紹');
+      document.getElementById('productDesc').focus();
+      return;
+    }
+
+    // 依 plannerLLM 選擇檢查對應 Key
+    if (state.plannerLLM === 'openai') {
+      const oKey = getActiveKey('openai');
+      if (!oKey || !oKey.startsWith('sk-')) {
+        alert('選擇 GPT-4o-mini 作為策劃師,請先設定 OpenAI Key(右上角設定按鈕)。');
+        openKeyModal();
+        return;
+      }
+    } else {
+      const gKey = getActiveKey('gemini-pro');
+      if (!gKey || gKey.length < 20) {
+        alert('AI 策劃需要 Gemini API Key。請先在右上角「設定 API Key」貼入 Gemini Key。');
+        openKeyModal();
+        return;
+      }
+    }
+
+    // 依選定的尺寸推導對應投放脈絡(取代已移除的平台 select)
+    const targetSize = document.getElementById('size').value;
+    const platformDesc = deriveContextFromSize(targetSize);
+    const tone = state.selectedTone === '__AI__'
+      ? '[AI_DECIDE_TONE: analyze the product and pick the most suitable brand tone yourself, then apply consistently across all plans]'
+      : state.selectedTone;
+    const count = parseInt(document.getElementById('planCount').value);
+
+    // 組人像描述
+    let personaDesc = '';
+    let personaCount = 0;
+    if (state.personaEnabled) {
+      if (state.personaMode === 'basic') {
+        personaDesc = buildPersonaBasicDesc();
+      } else {
+        personaDesc = document.getElementById('personaFree').value.trim();
+      }
+      personaCount = parseInt(document.getElementById('personaCount').value);
+      if (personaCount > count) personaCount = count;
+    }
+
+    // 組文案輸入
+    let copyText = '';
+    let fontStyle = state.selectedFont;
+    if (state.copyEnabled) {
+      copyText = document.getElementById('copyText').value.trim();
+    }
+
+    state.planning = true;
+    state.copyHighlights = null;
+    const btn = document.getElementById('planBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-sm" style="border-top-color:#fff;"></span> AI 策劃中…';
+
+    // 隱藏舊的 highlights
+    const highlightsBox = document.getElementById('copyHighlights');
+    if (highlightsBox) highlightsBox.classList.remove('show');
+
+    // 顯示策劃結果區(loading 狀態)
+    const section = document.getElementById('planResultSection');
+    section.style.display = 'block';
+    const llmLabel = state.plannerLLM === 'openai' ? 'GPT-4o-mini' : 'Gemini 3.6 Flash';
+    document.getElementById('planResults').innerHTML = `
+      <div class="plan-loading">
+        <div class="spinner-sm"></div>
+        <div>${llmLabel} 正在分析產品、規劃 ${count} 張素材方向…${personaDesc ? '<br/>· 整合模特兒設定' : ''}${copyText ? '<br/>· 擷取文案重點' : ''}</div>
+      </div>
+    `;
+
+    try {
+      const sys = buildPlannerSystemPrompt({ platformDesc, tone, count, personaDesc, personaCount, copyText, fontStyle, hasPromoImages: state.promoImages.length > 0 });
+      const userText = `產品介紹:\n${productDesc}\n\n${state.promoImages.length > 0 ? `⚠️ 附上 ${state.promoImages.length} 張優惠活動截圖作為視覺參考(尤其贈品外觀、主視覺配色、排版風格),生成 prompt 時請盡量在對應素材中還原贈品外觀與活動氛圍。\n\n` : ''}請根據上述資訊,輸出 ${count} 個素材方向 JSON。`;
+
+      // 組合視覺參考:產品圖 + 優惠截圖(如有)
+      const visualRefs = [...state.uploadedFiles];
+      for (const pi of state.promoImages) {
+        // 把 dataUrl 轉回 file-like 物件符合 callPlanner 期待的介面
+        const b64 = pi.dataUrl.split(',')[1];
+        const mime = pi.dataUrl.match(/data:([^;]+);/)?.[1] || 'image/jpeg';
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        const blob = new Blob([bytes], { type: mime });
+        blob.name = pi.name;
+        visualRefs.push({ file: blob, dataUrl: pi.dataUrl, name: pi.name });
+      }
+
+      const raw = await callPlanner(sys, userText, visualRefs);
+
+      // 解析 JSON(容錯:去 markdown fence,再嘗試解析)
+      let jsonText = raw.trim();
+      if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/^```(?:json)?\s*/, '').replace(/```\s*$/, '');
+      }
+      let parsed = JSON.parse(jsonText);
+
+      // 兩種可能:直接是陣列,或包在 { plans: [...] } 物件裡(OpenAI json_object 模式)
+      let plans;
+      if (Array.isArray(parsed)) {
+        plans = parsed;
+      } else if (parsed && Array.isArray(parsed.plans)) {
+        plans = parsed.plans;
+      } else {
+        throw new Error('AI 回傳格式錯誤:找不到 plans 陣列');
+      }
+      if (plans.length === 0) throw new Error('AI 回傳空的規劃');
+
+      // 擷取 copy_highlights(如果有的話)
+      let highlights = null;
+      for (const p of plans) {
+        if (p.copy_highlights) { highlights = p.copy_highlights; break; }
+      }
+      if (highlights) {
+        state.copyHighlights = highlights;
+        state._originalHighlights = { ...highlights }; // 記原始版本
+        state.copyHighlightsEditing = false;
+        renderCopyHighlights(highlights);
+      }
+
+      state.plans = plans.map(p => ({
+        title: p.title || '未命名',
+        reason: p.reason || '',
+        prompt: p.prompt || '',
+        selected: true,
+        imageUrl: null,
+        error: null
+      }));
+      renderPlans();
+    } catch (e) {
+      console.error(e);
+      document.getElementById('planResults').innerHTML = `
+        <div class="plan-empty" style="color:var(--err);border-color:var(--err);">
+          <span class="icon">⚠️</span>
+          策劃失敗:${escapeHtml((e.message || e).toString().slice(0, 200))}
+        </div>
+      `;
+    } finally {
+      state.planning = false;
+      btn.disabled = false;
+      btn.innerHTML = '<span class="sparkle">✨</span><span>AI 策劃素材包</span>';
+    }
+  }
+
+  // 渲染擷取重點
+  function renderCopyHighlights(h) {
+    const box = document.getElementById('copyHighlights');
+    if (!box) return;
+
+    const typeLabel = {
+      'PROMOTIONAL': '🔥 促銷型',
+      'BRAND_EMPHASIS': '✨ 品牌強調型',
+      'MIXED': '🎯 混合型'
+    }[h.content_type] || h.content_type || '—';
+
+    const editing = state.copyHighlightsEditing;
+
+    if (editing) {
+      // 編輯模式
+      box.innerHTML = `
+        <div style="font-size:10px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px;font-family:'JetBrains Mono',monospace;display:flex;justify-content:space-between;align-items:center;">
+          <span>✎ 編輯擷取重點</span>
+          <span style="font-family:'Noto Sans TC';letter-spacing:0;text-transform:none;color:var(--ink-mute);font-size:10px;">留空 = 不顯示該項</span>
+        </div>
+        <div class="kv-edit"><span class="k">類型</span>
+          <select id="hlType" style="font-size:11.5px;padding:3px 6px;margin:0;width:auto;">
+            <option value="PROMOTIONAL" ${h.content_type === 'PROMOTIONAL' ? 'selected' : ''}>🔥 促銷型</option>
+            <option value="BRAND_EMPHASIS" ${h.content_type === 'BRAND_EMPHASIS' ? 'selected' : ''}>✨ 品牌強調型</option>
+            <option value="MIXED" ${h.content_type === 'MIXED' ? 'selected' : ''}>🎯 混合型</option>
+          </select>
+        </div>
+        <div class="kv-edit"><span class="k">主標</span><input id="hlHeadline" type="text" value="${escapeHtml(h.headline || '')}" placeholder="例:全館 8 折" /></div>
+        <div class="kv-edit"><span class="k">副標</span><input id="hlSub" type="text" value="${escapeHtml(h.subheadline || '')}" placeholder="例:錯過等明年(可空)" /></div>
+        <div class="kv-edit"><span class="k">CTA</span><input id="hlCta" type="text" value="${escapeHtml(h.cta_code || '')}" placeholder="折扣碼(沒有請留空)" /></div>
+        <div class="kv-edit"><span class="k">說明</span><input id="hlCtaCtx" type="text" value="${escapeHtml(h.cta_context || '')}" placeholder="CTA 說明(沒 CTA 就空)" /></div>
+        <div style="display:flex;gap:6px;margin-top:8px;justify-content:flex-end;">
+          <button class="prompt-action" onclick="cancelEditHighlights()">✕ 取消</button>
+          <button class="prompt-action" onclick="saveEditHighlights()" style="background:var(--accent);color:#fff;border-color:var(--accent);">✓ 儲存</button>
+        </div>
+      `;
+      box.classList.add('show');
+      return;
+    }
+
+    // 檢視模式
+    const rows = [];
+    rows.push(`<div class="kv"><span class="k">類型</span><span class="v">${escapeHtml(typeLabel)}</span></div>`);
+    if (h.headline) rows.push(`<div class="kv"><span class="k">主標</span><span class="v">${escapeHtml(h.headline)}</span></div>`);
+    if (h.subheadline) rows.push(`<div class="kv"><span class="k">副標</span><span class="v">${escapeHtml(h.subheadline)}</span></div>`);
+    if (h.cta_code) rows.push(`<div class="kv"><span class="k">CTA</span><span class="v">${escapeHtml(h.cta_code)}</span></div>`);
+    if (h.cta_context) rows.push(`<div class="kv"><span class="k">說明</span><span class="v">${escapeHtml(h.cta_context)}</span></div>`);
+
+    box.innerHTML = `
+      <div style="font-size:10px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:6px;font-family:'JetBrains Mono',monospace;display:flex;justify-content:space-between;align-items:center;">
+        <span>✨ AI 擷取重點</span>
+        <button class="prompt-action" onclick="startEditHighlights()" style="margin:0;">✎ 修正</button>
+      </div>
+      ${rows.join('')}
+      <div style="font-size:10.5px;color:var(--ink-mute);margin-top:8px;line-height:1.5;">
+        ⚠️ AI 抓的可能有誤解或過度腦補,生圖前請檢查。點「✎ 修正」可以編輯。
+      </div>
+    `;
+    box.classList.add('show');
+  }
+
+  function startEditHighlights() {
+    state.copyHighlightsEditing = true;
+    renderCopyHighlights(state.copyHighlights || {});
+  }
+
+  function cancelEditHighlights() {
+    state.copyHighlightsEditing = false;
+    renderCopyHighlights(state.copyHighlights || {});
+  }
+
+  function saveEditHighlights() {
+    const updated = {
+      content_type: document.getElementById('hlType').value,
+      headline: document.getElementById('hlHeadline').value.trim(),
+      subheadline: document.getElementById('hlSub').value.trim(),
+      cta_code: document.getElementById('hlCta').value.trim(),
+      cta_context: document.getElementById('hlCtaCtx').value.trim()
+    };
+    // 保存到 state
+    state.copyHighlights = updated;
+    // 把使用者的修正同步到 plans 的第一個 element(如果已經策劃過,生圖時要用新的)
+    if (state.plans && state.plans.length > 0) {
+      state.plans[0].copy_highlights = updated;
+      // 讓所有 prompt 內文的關鍵字被替換為新版
+      applyHighlightsToPrompts(updated);
+    }
+    state.copyHighlightsEditing = false;
+    renderCopyHighlights(updated);
+  }
+
+  // 把使用者修正過的重點套回所有 prompt(替換 headline/subheadline/cta 出現的位置)
+  function applyHighlightsToPrompts(newH) {
+    if (!state.plans) return;
+    const oldH = state._originalHighlights || {};
+
+    for (const p of state.plans) {
+      let prompt = p.prompt || '';
+      // 舊 → 新 替換(有引號的字串)
+      if (oldH.headline && newH.headline && oldH.headline !== newH.headline) {
+        prompt = prompt.split(oldH.headline).join(newH.headline);
+      }
+      if (oldH.subheadline && newH.subheadline && oldH.subheadline !== newH.subheadline) {
+        prompt = prompt.split(oldH.subheadline).join(newH.subheadline);
+      }
+      if (oldH.cta_code && newH.cta_code && oldH.cta_code !== newH.cta_code) {
+        prompt = prompt.split(oldH.cta_code).join(newH.cta_code);
+      }
+      // 如果使用者把 CTA 清空,把 prompt 內對應段落也剃除
+      if (oldH.cta_code && !newH.cta_code) {
+        // 移除包含舊 cta_code 的短語
+        const patterns = [
+          new RegExp(`[,.]?\\s*[^,.]*${oldH.cta_code}[^,.]*[,.]?`, 'gi'),
+        ];
+        for (const rx of patterns) prompt = prompt.replace(rx, ' ');
+      }
+      p.prompt = prompt.replace(/\s+/g, ' ').trim();
+    }
+    // 更新 UI 上的策劃卡片(如果已渲染)
+    if (typeof renderPlans === 'function') renderPlans();
+  }
+
+
+  // ===== Render 策劃結果卡片 =====
+  function renderPlans() {
+    const box = document.getElementById('planResults');
+    if (state.plans.length === 0) {
+      box.innerHTML = `<div class="plan-empty"><span class="icon">📋</span>還沒有策劃結果</div>`;
+      updateSelectedCount();
+      return;
+    }
+    box.innerHTML = state.plans.map((p, i) => {
+      const expanded = p._expanded;
+      const shortText = escapeHtml(p.prompt.slice(0, 200)) + (p.prompt.length > 200 ? '…' : '');
+      const fullText = escapeHtml(p.prompt);
+      return `
+      <div class="plan-card ${p.selected ? 'selected' : ''}">
+        <span class="num" onclick="togglePlan(${i})" style="cursor:pointer;">#${String(i + 1).padStart(2, '0')}</span>
+        <div class="check" onclick="togglePlan(${i})" style="cursor:pointer;">✓</div>
+        <div class="body">
+          <div class="title" onclick="togglePlan(${i})" style="cursor:pointer;">${escapeHtml(p.title)}</div>
+          <div class="reason" onclick="togglePlan(${i})" style="cursor:pointer;">${escapeHtml(p.reason)}</div>
+          <div class="prompt-peek ${expanded ? 'expanded' : ''}" id="prompt-peek-${i}">${expanded ? fullText : shortText}</div>
+          <div class="prompt-actions">
+            <button class="prompt-action" onclick="togglePromptExpand(${i}, event)">${expanded ? '▲ 收合' : '▼ 展開完整 prompt'}</button>
+            <button class="prompt-action" onclick="copyPlanPrompt(${i}, event)">⧉ 複製</button>
+            <button class="prompt-action" onclick="editPlanPrompt(${i}, event)">✎ 編輯</button>
+          </div>
+        </div>
+      </div>
+    `;
+    }).join('');
+    updateSelectedCount();
+  }
+
+  function togglePromptExpand(i, ev) {
+    ev.stopPropagation();
+    state.plans[i]._expanded = !state.plans[i]._expanded;
+    renderPlans();
+  }
+
+  function copyPlanPrompt(i, ev) {
+    ev.stopPropagation();
+    navigator.clipboard.writeText(state.plans[i].prompt);
+    const btn = ev.target;
+    const orig = btn.textContent;
+    btn.textContent = '✓ 已複製';
+    setTimeout(() => btn.textContent = orig, 1200);
+  }
+
+  function editPlanPrompt(i, ev) {
+    ev.stopPropagation();
+    const p = state.plans[i];
+    const newPrompt = prompt(`編輯 #${String(i + 1).padStart(2, '0')} 「${p.title}」的 prompt:\n\n(直接改英文內容,按確定保存;取消則不變更)`, p.prompt);
+    if (newPrompt !== null && newPrompt.trim()) {
+      state.plans[i].prompt = newPrompt.trim();
+      renderPlans();
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  }
+
+  function togglePlan(i) {
+    state.plans[i].selected = !state.plans[i].selected;
+    renderPlans();
+  }
+
+  function selectAllPlans(v) {
+    state.plans.forEach(p => p.selected = v);
+    renderPlans();
+  }
+
+  function updateSelectedCount() {
+    const n = state.plans.filter(p => p.selected).length;
+    document.getElementById('planSelectedCount').textContent = `已選 ${n} / ${state.plans.length} 張`;
+  }
+
+  // ===== 執行平行生圖 =====
+  async function runGeneration() {
+    const selected = state.plans.filter(p => p.selected);
+    if (selected.length === 0) {
+      alert('請至少勾選 1 張要生成');
+      return;
+    }
+
+    // 決定使用哪個引擎
+    const execEngine = document.getElementById('execEngine').value;
+    const targetSize = document.getElementById('size').value; // 使用者選的最終尺寸
+    const quality = document.getElementById('quality').value;
+
+    // 送給 API 的近似尺寸(OpenAI 限定四種、Gemini 較彈性但走標準)
+    const isOpenAIEng = execEngine === 'openai' || execEngine === 'openai-sunburst';
+    const size = mapToApiSize(targetSize, isOpenAIEng);
+
+    // Key 檢查
+    const keyType = isOpenAIEng ? 'openai' : 'gemini-pro';
+    const key = getActiveKey(keyType);
+    const isValid = isOpenAIEng
+      ? (key && key.startsWith('sk-'))
+      : (key && key.length > 20);
+    if (!isValid) {
+      alert(`${isOpenAIEng ? 'OpenAI' : 'Gemini'} Key 未設定`);
+      openKeyModal();
+      return;
+    }
+
+    // 切引擎(這樣 API 呼叫函式會用對的 endpoint)
+    const originalEngine = state.engine;
+    const originalTopMode = state.topMode;
+    state.engine = execEngine;
+    state.topMode = state.uploadedFiles.length > 0 ? 'edit' : 'generate';
+
+    state.generating = true;
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.textContent = `生成中… (0/${selected.length})`;
+
+    // 初始化結果區
+    state.images = [];
+    renderPlanLoadingGrid(selected);
+
+    document.getElementById('resultMeta').textContent =
+      `${execEngine === 'gemini-flash' ? 'nano-banana-2-flash' : execEngine === 'gemini-pro' ? 'nano-banana-pro' : execEngine === 'openai-sunburst' ? 'gpt-image-2.5-sunburst' : 'gpt-image-2'} · AI 策劃 · ${targetSize} · ${quality} · ${selected.length} 張並行`;
+
+    // 平行度依引擎:Flash 最快最寬鬆 → 更高並行;Pro 中等;Sunburst 慢
+    const CONCURRENCY = execEngine === 'gemini-flash' ? 8
+                      : execEngine === 'gemini-pro' ? 6
+                      : execEngine === 'openai-sunburst' ? 3
+                      : 4;
+    let done = 0;
+    const updateBtn = () => btn.textContent = `生成中… (${done}/${selected.length})`;
+
+    async function processOne(planIndex, gridIndex) {
+      const plan = selected[planIndex];
+      let attempt = 0;
+      let lastErr = null;
+      while (attempt < 2) {
+        attempt++;
+        try {
+          // 第 2 次嘗試:對敏感關鍵字做輕度替換
+          const usePrompt = attempt === 1 ? plan.prompt : sanitizeSensitivePrompt(plan.prompt);
+          const data = await callOpenAI(usePrompt, 1, quality, size);
+          const b64 = data.data[0].b64_json;
+          let url = `data:image/png;base64,${b64}`;
+
+          // 如果生成尺寸跟目標尺寸不同,就 resize 到目標尺寸
+          if (size !== targetSize) {
+            const [tw, th] = targetSize.split('x').map(Number);
+            try {
+              url = await resizeDataUrl(url, tw, th, 'cover');
+            } catch (resizeErr) {
+              console.warn('resize 失敗,用原圖:', resizeErr);
+            }
+          }
+
+          state.images[gridIndex] = { url, prompt: usePrompt, index: gridIndex, title: plan.title, targetSize, retriedWith: attempt === 2 ? usePrompt : null };
+          renderPlanCard(gridIndex, url, plan);
+          lastErr = null;
+          break;
+        } catch (e) {
+          console.error(`Attempt ${attempt} failed:`, e.message);
+          lastErr = e;
+          // 判斷是否值得重試:safety、rate limit、暫時性錯誤
+          const msg = (e.message || '').toLowerCase();
+          const worthRetry = msg.includes('safety') || msg.includes('rejected') ||
+                             msg.includes('rate') || msg.includes('timeout') ||
+                             msg.includes('temporarily');
+          if (!worthRetry || attempt >= 2) break;
+          // 等 2 秒再重試
+          await new Promise(r => setTimeout(r, 2000));
+        }
+      }
+      if (lastErr) {
+        state.images[gridIndex] = { error: lastErr.message, prompt: plan.prompt, index: gridIndex, title: plan.title };
+        renderError(gridIndex, `${plan.title}: ${lastErr.message}`.slice(0, 100));
+      }
+      done++;
+      updateBtn();
+    }
+
+    // 把可能觸發 safety 過濾的敏感詞替換成中性版本
+    function sanitizeSensitivePrompt(p) {
+      return p
+        .replace(/back to school/gi, 'autumn season')
+        .replace(/school|schoolgirl|student/gi, 'young adult')
+        .replace(/開學/g, '秋季')
+        .replace(/學生/g, '年輕成人')
+        .replace(/返校/g, '新學期')
+        .replace(/children|kids|child|teen|teenager/gi, 'adult')
+        .replace(/兒童|孩童|小孩|青少年/g, '成人')
+        // 明確加註成人聲明
+        + '\n\n[Additional constraint: All depicted people must be clearly adult, 25 years or older. No minors, no students, no teenagers.]';
+    }
+
+    // 用滑動窗口控制平行度
+    const tasks = [];
+    let nextIdx = 0;
+    async function worker() {
+      while (nextIdx < selected.length) {
+        const i = nextIdx++;
+        await processOne(i, i);
+      }
+    }
+    for (let w = 0; w < Math.min(CONCURRENCY, selected.length); w++) {
+      tasks.push(worker());
+    }
+    await Promise.all(tasks);
+
+    state.generating = false;
+    btn.disabled = false;
+    btn.textContent = '開始平行生成 →';
+    state.engine = originalEngine;
+    state.topMode = originalTopMode;
+    document.getElementById('downloadAllBtn').disabled = false;
+    document.getElementById('clearBtn').disabled = false;
+  }
+
+  // AI 策劃版本的 loading grid
+  function renderPlanLoadingGrid(plans) {
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    plans.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'card loading';
+      card.id = `card-${i}`;
+      card.innerHTML = `
+        <div class="spinner"></div>
+        <div class="label">#${String(i + 1).padStart(2, '0')}<br/>${escapeHtml(p.title)}</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // 有 title 版本的 renderCard(取代原本 renderCard 只顯示序號)
+  function renderPlanCard(i, url, plan) {
+    const card = document.getElementById(`card-${i}`);
+    if (!card) return;
+    card.className = 'card';
+    card.innerHTML = `
+      <span class="badge">#${String(i + 1).padStart(2, '0')}</span>
+      <img src="${url}" alt="${escapeHtml(plan.title)}" />
+      <div class="scene-label">${escapeHtml(plan.title)}</div>
+      <div class="overlay">
+        <div class="overlay-row">
+          <button onclick="downloadOne(${i})">↓ 下載</button>
+          <button onclick="copyPrompt(${i}, event)">⌘ 複製 prompt</button>
+          <button onclick="viewLarge(${i})">⌕ 放大</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // 初始化
+  setEngine(state.engine);
+  updatePreview();
+</script>
+
+</body>
+</html>

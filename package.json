@@ -1,0 +1,13 @@
+{
+  "name": "butterball",
+  "version": "7.9.0",
+  "description": "AI 廣告素材工作站 — cacaFly 內部工具",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
